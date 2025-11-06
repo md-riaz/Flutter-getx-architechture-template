@@ -44,10 +44,9 @@ class HomeController extends BaseController {
   /// Start timer to update random state periodically
   void _startRandomStateTimer() {
     _stateTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      // Check if timer is still active before updating state
-      if (!timer.isActive) {
-        return;
-      }
+      // Exit early if controller is being disposed
+      if (_stateTimer == null) return;
+      
       randomState.value = _random.nextInt(100);
       print('[HomeController] Random state updated: ${randomState.value}');
     });
