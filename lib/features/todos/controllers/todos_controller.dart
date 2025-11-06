@@ -8,6 +8,9 @@ import '../services/todos_service.dart';
 class TodosController extends BaseController {
   static const tag = 'TodosController';
   
+  @override
+  String get controllerName => tag;
+  
   final TodosService _todosService;
   
   final titleController = RxString('');
@@ -17,6 +20,7 @@ class TodosController extends BaseController {
   
   Timer? _stateTimer;
   final _random = Random();
+  bool _isDisposed = false;
 
   TodosController({TodosService? todosService})
       : _todosService = todosService ?? Get.find<TodosService>();
@@ -41,12 +45,17 @@ class TodosController extends BaseController {
   @override
   void onClose() {
     _stateTimer?.cancel();
+    _stateTimer = null;
+    _isDisposed = true;
     super.onClose();
   }
 
   /// Start timer to update random state periodically
   void _startRandomStateTimer() {
     _stateTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      // Exit early if controller is being disposed
+      if (_isDisposed) return;
+      
       randomState.value = _random.nextInt(100);
       print('[TodosController] Random state updated: ${randomState.value}');
     });

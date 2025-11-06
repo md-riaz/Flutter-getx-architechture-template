@@ -8,6 +8,9 @@ import '../services/auth_service.dart';
 class AuthController extends BaseController {
   static const tag = 'AuthController';
   
+  @override
+  String get controllerName => tag;
+  
   final AuthService _authService;
   
   final emailController = RxString('');
@@ -17,6 +20,7 @@ class AuthController extends BaseController {
   
   Timer? _stateTimer;
   final _random = Random();
+  bool _isDisposed = false;
 
   AuthController({AuthService? authService})
       : _authService = authService ?? Get.find<AuthService>();
@@ -36,12 +40,17 @@ class AuthController extends BaseController {
   @override
   void onClose() {
     _stateTimer?.cancel();
+    _stateTimer = null;
+    _isDisposed = true;
     super.onClose();
   }
 
   /// Start timer to update random state periodically
   void _startRandomStateTimer() {
     _stateTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      // Exit early if controller is being disposed
+      if (_isDisposed) return;
+      
       randomState.value = _random.nextInt(100);
       print('[AuthController] Random state updated: ${randomState.value}');
     });
