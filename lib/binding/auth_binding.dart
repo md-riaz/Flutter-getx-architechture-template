@@ -7,10 +7,15 @@ class AuthBinding extends Bindings {
   void dependencies() {
     print('[AuthBinding] Setting up auth dependencies');
     
-    // Register AuthController with fenix: true for auto-recovery
-    Get.lazyPut<AuthController>(
-      () => AuthController(),
-      fenix: true,
-    );
+    // Only register if not already registered to avoid double initialization
+    if (!Get.isRegistered<AuthController>()) {
+      // Register AuthController with fenix: true for auto-recovery
+      Get.lazyPut<AuthController>(
+        () => AuthController(),
+        fenix: true,
+      );
+    } else {
+      print('[AuthBinding] AuthController already registered, skipping');
+    }
   }
 }

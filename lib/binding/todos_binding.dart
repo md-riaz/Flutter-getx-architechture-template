@@ -8,15 +8,24 @@ class TodosBinding extends Bindings {
   void dependencies() {
     print('[TodosBinding] Setting up todos dependencies');
     
-    // Register TodosService (not permanent, can be deleted on logout)
-    Get.put<TodosService>(
-      TodosService(),
-    );
+    // Only register if not already registered to avoid double initialization
+    if (!Get.isRegistered<TodosService>()) {
+      // Register TodosService (not permanent, can be deleted on logout)
+      Get.put<TodosService>(
+        TodosService(),
+      );
+    } else {
+      print('[TodosBinding] TodosService already registered, skipping');
+    }
     
-    // Register TodosController with fenix: true for auto-recovery
-    Get.lazyPut<TodosController>(
-      () => TodosController(),
-      fenix: true,
-    );
+    if (!Get.isRegistered<TodosController>()) {
+      // Register TodosController with fenix: true for auto-recovery
+      Get.lazyPut<TodosController>(
+        () => TodosController(),
+        fenix: true,
+      );
+    } else {
+      print('[TodosBinding] TodosController already registered, skipping');
+    }
   }
 }

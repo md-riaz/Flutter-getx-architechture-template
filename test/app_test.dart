@@ -182,6 +182,29 @@ void main() {
       // Verify bindings were deleted
       expect(Get.isRegistered<TodosService>(), false);
     });
+
+    test('bindings should not double-initialize when called multiple times', () {
+      int initCount = 0;
+      
+      // Create a custom binding that tracks initialization
+      final binding = BindingsBuilder(() {
+        if (!Get.isRegistered<String>()) {
+          Get.put<String>('test-service');
+          initCount++;
+        }
+      });
+      
+      service.registerFeature('test', binding);
+      
+      // Call createFeatureBindings multiple times
+      service.createFeatureBindings();
+      expect(initCount, 1);
+      expect(Get.isRegistered<String>(), true);
+      
+      // Call again - should not re-initialize
+      service.createFeatureBindings();
+      expect(initCount, 1, reason: 'Service should only be initialized once');
+    });
   });
 
   group('AuthController Tests', () {
