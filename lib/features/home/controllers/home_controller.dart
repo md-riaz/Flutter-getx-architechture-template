@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:get/get.dart';
 import '../../../base/base_controller.dart';
-import '../../../services/auth_service.dart';
+import '../../auth/services/auth_service.dart';
 
 /// Home controller with random state via Timer
 class HomeController extends BaseController {

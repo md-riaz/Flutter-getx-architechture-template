@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import '../features/auth/models/user.dart';
-import '../features/auth/repositories/auth_repository.dart';
-import './feature_registry_service.dart';
+import '../models/user.dart';
+import '../repositories/auth_repository.dart';
+import '../../../services/feature_registry_service.dart';
 
 /// Authentication service (permanent via bindings)
 class AuthService extends GetxService {

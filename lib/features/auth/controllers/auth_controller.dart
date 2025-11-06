@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:get/get.dart';
 import '../../../base/base_controller.dart';
-import '../../../services/auth_service.dart';
+import '../services/auth_service.dart';
 
 /// Authentication controller with random state via Timer
 class AuthController extends BaseController {

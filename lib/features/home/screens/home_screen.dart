@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
+import '../../../services/theme_service.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final themeService = Get.find<ThemeService>();
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
+          Obx(() => IconButton(
+            icon: Icon(
+              themeService.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+            ),
+            onPressed: themeService.toggleTheme,
+            tooltip: 'Toggle Theme',
+          )),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: controller.logout,
@@ -49,6 +59,15 @@ class HomeScreen extends GetView<HomeController> {
                   minimumSize: const Size(200, 50),
                 ),
                 child: const Text('Increment Counter'),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: () => Get.toNamed('/todos'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(200, 50),
+                ),
+                icon: const Icon(Icons.check_box),
+                label: const Text('Go to Todos'),
               ),
               const SizedBox(height: 40),
               Obx(() => Text(
