@@ -1,4 +1,7 @@
 import 'package:get/get.dart';
+import '../features/home/controllers/home_controller.dart';
+import '../features/todos/controllers/todos_controller.dart';
+import '../features/todos/services/todos_service.dart';
 
 /// Service to manage feature bindings
 /// Creates bindings on login, deletes on logout
@@ -23,11 +26,26 @@ class FeatureRegistryService extends GetxService {
   /// Delete all registered feature bindings (on logout)
   void deleteFeatureBindings() {
     print('[FeatureRegistryService] Deleting feature bindings');
-    for (final entry in _registeredFeatures.entries) {
-      print('[FeatureRegistryService] Deleting binding for: ${entry.key}');
-      // Delete all controllers and services associated with the feature
-      // Services with matching tags will have onClose() called
-      Get.delete(force: true, tag: entry.key);
+    
+    // Delete specific controllers for home feature
+    if (_registeredFeatures.containsKey('home')) {
+      print('[FeatureRegistryService] Deleting HomeController');
+      try {
+        Get.delete<HomeController>(force: true);
+      } catch (e) {
+        print('[FeatureRegistryService] Error deleting HomeController: $e');
+      }
+    }
+    
+    // Delete specific controllers and services for todos feature
+    if (_registeredFeatures.containsKey('todos')) {
+      print('[FeatureRegistryService] Deleting TodosController and TodosService');
+      try {
+        Get.delete<TodosController>(force: true);
+        Get.delete<TodosService>(force: true);
+      } catch (e) {
+        print('[FeatureRegistryService] Error deleting todos bindings: $e');
+      }
     }
   }
 

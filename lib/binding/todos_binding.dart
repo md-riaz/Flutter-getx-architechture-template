@@ -11,14 +11,12 @@ class TodosBinding extends Bindings {
     // Register TodosService (not permanent, can be deleted on logout)
     Get.put<TodosService>(
       TodosService(),
-      tag: 'todos',
     );
     
     // Register TodosController with fenix: true for auto-recovery
     Get.lazyPut<TodosController>(
       () => TodosController(),
       fenix: true,
-      tag: TodosController.tag,
     );
   }
 }
