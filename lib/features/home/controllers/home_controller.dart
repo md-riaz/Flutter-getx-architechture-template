@@ -18,6 +18,7 @@ class HomeController extends BaseController {
   
   Timer? _stateTimer;
   final _random = Random();
+  bool _isDisposed = false;
 
   HomeController({AuthService? authService})
       : _authService = authService ?? Get.find<AuthService>();
@@ -36,6 +37,7 @@ class HomeController extends BaseController {
 
   @override
   void onClose() {
+    _isDisposed = true;
     _stateTimer?.cancel();
     _stateTimer = null;
     super.onClose();
@@ -45,7 +47,7 @@ class HomeController extends BaseController {
   void _startRandomStateTimer() {
     _stateTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
       // Exit early if controller is being disposed
-      if (_stateTimer == null) return;
+      if (_isDisposed) return;
       
       randomState.value = _random.nextInt(100);
       print('[HomeController] Random state updated: ${randomState.value}');

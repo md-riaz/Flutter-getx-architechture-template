@@ -20,6 +20,7 @@ class TodosController extends BaseController {
   
   Timer? _stateTimer;
   final _random = Random();
+  bool _isDisposed = false;
 
   TodosController({TodosService? todosService})
       : _todosService = todosService ?? Get.find<TodosService>();
@@ -43,6 +44,7 @@ class TodosController extends BaseController {
 
   @override
   void onClose() {
+    _isDisposed = true;
     _stateTimer?.cancel();
     _stateTimer = null;
     super.onClose();
@@ -52,7 +54,7 @@ class TodosController extends BaseController {
   void _startRandomStateTimer() {
     _stateTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
       // Exit early if controller is being disposed
-      if (_stateTimer == null) return;
+      if (_isDisposed) return;
       
       randomState.value = _random.nextInt(100);
       print('[TodosController] Random state updated: ${randomState.value}');
