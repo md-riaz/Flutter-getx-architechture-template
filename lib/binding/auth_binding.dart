@@ -11,7 +11,6 @@ class AuthBinding extends Bindings {
     Get.lazyPut<AuthController>(
       () => AuthController(),
       fenix: true,
-      tag: AuthController.tag,
     );
   }
 }

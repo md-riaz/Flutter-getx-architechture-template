@@ -61,7 +61,7 @@ void main() {
     test('login should authenticate user and create feature bindings', () async {
       // Register a test feature
       final binding = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService(), tag: 'todos');
+        Get.put<TodosService>(TodosService());
       });
       featureRegistry.registerFeature('todos', binding);
 
@@ -73,20 +73,20 @@ void main() {
       expect(authService.currentUser?.email, 'test@example.com');
       
       // Verify feature bindings were created
-      expect(Get.isRegistered<TodosService>(tag: 'todos'), true);
+      expect(Get.isRegistered<TodosService>(), true);
     });
 
     test('logout should clear user and delete feature bindings', () async {
       // Register and create feature bindings
       final binding = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService(), tag: 'todos');
+        Get.put<TodosService>(TodosService());
       });
       featureRegistry.registerFeature('todos', binding);
       
       // Login first
       await authService.login('test@example.com', 'password');
       expect(authService.isAuthenticated, true);
-      expect(Get.isRegistered<TodosService>(tag: 'todos'), true);
+      expect(Get.isRegistered<TodosService>(), true);
       
       // Logout
       await authService.logout();
@@ -94,7 +94,7 @@ void main() {
       expect(authService.isAuthenticated, false);
       expect(authService.currentUser, isNull);
       // Feature bindings should be deleted
-      expect(Get.isRegistered<TodosService>(tag: 'todos'), false);
+      expect(Get.isRegistered<TodosService>(), false);
     });
 
     test('isAuthenticated should return false initially', () {
@@ -148,10 +148,10 @@ void main() {
     test('createFeatureBindings should initialize all registered features', () {
       // Register features with bindings
       final binding1 = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService(), tag: 'todos');
+        Get.put<TodosService>(TodosService());
       });
       final binding2 = BindingsBuilder(() {
-        Get.put<String>('home-service', tag: 'home');
+        Get.put<String>('home-service');
       });
       
       service.registerFeature('todos', binding1);
@@ -161,26 +161,26 @@ void main() {
       service.createFeatureBindings();
       
       // Verify bindings were created
-      expect(Get.isRegistered<TodosService>(tag: 'todos'), true);
-      expect(Get.isRegistered<String>(tag: 'home'), true);
+      expect(Get.isRegistered<TodosService>(), true);
+      expect(Get.isRegistered<String>(), true);
     });
 
     test('deleteFeatureBindings should remove all feature bindings', () {
       // Register and create features
       final binding = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService(), tag: 'todos');
+        Get.put<TodosService>(TodosService());
       });
       
       service.registerFeature('todos', binding);
       service.createFeatureBindings();
       
-      expect(Get.isRegistered<TodosService>(tag: 'todos'), true);
+      expect(Get.isRegistered<TodosService>(), true);
       
       // Delete bindings
       service.deleteFeatureBindings();
       
       // Verify bindings were deleted
-      expect(Get.isRegistered<TodosService>(tag: 'todos'), false);
+      expect(Get.isRegistered<TodosService>(), false);
     });
   });
 
@@ -306,10 +306,10 @@ void main() {
     test('feature controllers should be cleaned up on logout', () async {
       // Register features
       final homeBinding = BindingsBuilder(() {
-        Get.put<String>('home-controller', tag: 'home');
+        Get.put<HomeController>(HomeController(authService: authService));
       });
       final todosBinding = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService(), tag: 'todos');
+        Get.put<TodosService>(TodosService());
       });
       
       featureRegistry.registerFeature('home', homeBinding);
@@ -318,42 +318,42 @@ void main() {
       // Login to create feature bindings
       await authService.login('test@example.com', 'password');
       
-      expect(Get.isRegistered<String>(tag: 'home'), true);
-      expect(Get.isRegistered<TodosService>(tag: 'todos'), true);
+      expect(Get.isRegistered<HomeController>(), true);
+      expect(Get.isRegistered<TodosService>(), true);
       
       // Logout to delete feature bindings
       await authService.logout();
       
       // Verify cleanup
-      expect(Get.isRegistered<String>(tag: 'home'), false);
-      expect(Get.isRegistered<TodosService>(tag: 'todos'), false);
+      expect(Get.isRegistered<HomeController>(), false);
+      expect(Get.isRegistered<TodosService>(), false);
       expect(authService.isAuthenticated, false);
     });
 
     test('multiple login/logout cycles should properly manage memory', () async {
       final binding = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService(), tag: 'todos');
+        Get.put<TodosService>(TodosService());
       });
       featureRegistry.registerFeature('todos', binding);
       
       // First cycle
       await authService.login('user1@example.com', 'password');
       expect(authService.isAuthenticated, true);
-      expect(Get.isRegistered<TodosService>(tag: 'todos'), true);
+      expect(Get.isRegistered<TodosService>(), true);
       
       await authService.logout();
       expect(authService.isAuthenticated, false);
-      expect(Get.isRegistered<TodosService>(tag: 'todos'), false);
+      expect(Get.isRegistered<TodosService>(), false);
       
       // Second cycle
       await authService.login('user2@example.com', 'password');
       expect(authService.isAuthenticated, true);
       expect(authService.currentUser?.email, 'user2@example.com');
-      expect(Get.isRegistered<TodosService>(tag: 'todos'), true);
+      expect(Get.isRegistered<TodosService>(), true);
       
       await authService.logout();
       expect(authService.isAuthenticated, false);
-      expect(Get.isRegistered<TodosService>(tag: 'todos'), false);
+      expect(Get.isRegistered<TodosService>(), false);
     });
 
     test('TodosService onClose should clear data', () {
