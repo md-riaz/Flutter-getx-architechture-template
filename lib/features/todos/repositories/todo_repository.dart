@@ -63,8 +63,9 @@ class TodoRepository {
   Future<bool> delete(String id) async {
     print('[TodoRepository] Deleting todo: $id');
     
-    final removed = _todos.removeWhere((todo) => todo.id == id);
-    if (removed > 0) {
+    final initialLength = _todos.length;
+    _todos.removeWhere((todo) => todo.id == id);
+    if (_todos.length < initialLength) {
       print('[TodoRepository] Todo deleted: $id');
       return true;
     }
