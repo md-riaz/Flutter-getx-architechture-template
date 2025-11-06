@@ -5,8 +5,10 @@ import 'package:flutter_getx_architecture/features/auth/services/auth_service.da
 import 'package:flutter_getx_architecture/features/auth/repositories/auth_repository.dart';
 import 'package:flutter_getx_architecture/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_getx_architecture/features/home/controllers/home_controller.dart';
+import 'package:flutter_getx_architecture/features/home/binding/home_binding.dart';
 import 'package:flutter_getx_architecture/features/todos/controllers/todos_controller.dart';
 import 'package:flutter_getx_architecture/features/todos/services/todos_service.dart';
+import 'package:flutter_getx_architecture/features/todos/binding/todos_binding.dart';
 
 void main() {
   group('AuthRepository Tests', () {
@@ -426,6 +428,44 @@ void main() {
       // Verify cleanup - controllers should be deleted without errors
       expect(Get.isRegistered<HomeController>(), false);
       expect(Get.isRegistered<TodosController>(), false);
+      expect(authService.isAuthenticated, false);
+    });
+
+    test('repeated login/logout cycles should work without registration errors', () async {
+      // Register features with actual binding classes
+      featureRegistry.registerFeature('home', HomeBinding());
+      featureRegistry.registerFeature('todos', TodosBinding());
+      
+      // First login cycle
+      await authService.login('user1@example.com', 'password');
+      expect(authService.isAuthenticated, true);
+      expect(authService.currentUser?.email, 'user1@example.com');
+      
+      // First logout - factories are cleared along with instances
+      await authService.logout();
+      expect(authService.isAuthenticated, false);
+      // Factories should be removed, not just instances
+      expect(Get.isRegistered<HomeController>(), false);
+      expect(Get.isRegistered<TodosController>(), false);
+      
+      // Second login cycle - factories are re-registered without errors
+      await authService.login('user2@example.com', 'password');
+      expect(authService.isAuthenticated, true);
+      expect(authService.currentUser?.email, 'user2@example.com');
+      
+      // Second logout
+      await authService.logout();
+      expect(authService.isAuthenticated, false);
+      expect(Get.isRegistered<HomeController>(), false);
+      expect(Get.isRegistered<TodosController>(), false);
+      
+      // Third login cycle - verify it still works
+      await authService.login('user3@example.com', 'password');
+      expect(authService.isAuthenticated, true);
+      expect(authService.currentUser?.email, 'user3@example.com');
+      
+      // Final logout
+      await authService.logout();
       expect(authService.isAuthenticated, false);
     });
   });

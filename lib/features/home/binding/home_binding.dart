@@ -7,10 +7,9 @@ class HomeBinding extends Bindings {
   void dependencies() {
     print('[HomeBinding] Setting up home dependencies');
     
-    // Register HomeController with fenix: true for auto-recovery
+    // Register HomeController - factory will be cleared on logout
     Get.lazyPut<HomeController>(
       () => HomeController(),
-      fenix: true,
     );
   }
 }

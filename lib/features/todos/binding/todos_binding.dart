@@ -13,10 +13,9 @@ class TodosBinding extends Bindings {
       TodosService(),
     );
     
-    // Register TodosController with fenix: true for auto-recovery
+    // Register TodosController - factory will be cleared on logout
     Get.lazyPut<TodosController>(
       () => TodosController(),
-      fenix: true,
     );
   }
 }
