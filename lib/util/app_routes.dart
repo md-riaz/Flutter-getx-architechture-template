@@ -2,9 +2,9 @@ import 'package:get/get.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/home/screens/home_screen.dart';
 import '../features/todos/screens/todos_screen.dart';
-import '../binding/auth_binding.dart';
-import '../binding/home_binding.dart';
-import '../binding/todos_binding.dart';
+import '../features/auth/binding/auth_binding.dart';
+import '../features/home/binding/home_binding.dart';
+import '../features/todos/binding/todos_binding.dart';
 import '../services/feature_registry_service.dart';
 
 /// App routes configuration
@@ -22,12 +22,12 @@ class AppRoutes {
     GetPage(
       name: home,
       page: () => const HomeScreen(),
-      binding: HomeBinding(),
+      // No binding - controller managed by feature registry
     ),
     GetPage(
       name: todos,
       page: () => const TodosScreen(),
-      binding: TodosBinding(),
+      // No binding - controller and service managed by feature registry
     ),
   ];
 
