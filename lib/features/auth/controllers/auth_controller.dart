@@ -39,12 +39,18 @@ class AuthController extends BaseController {
   @override
   void onClose() {
     _stateTimer?.cancel();
+    _stateTimer = null;
     super.onClose();
   }
 
   /// Start timer to update random state periodically
   void _startRandomStateTimer() {
     _stateTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      // Check if timer is still active and not cancelled
+      if (_stateTimer == null || !_stateTimer!.isActive) {
+        timer.cancel();
+        return;
+      }
       randomState.value = _random.nextInt(100);
       print('[AuthController] Random state updated: ${randomState.value}');
     });
