@@ -7,15 +7,9 @@ class HomeBinding extends Bindings {
   void dependencies() {
     print('[HomeBinding] Setting up home dependencies');
     
-    // Register HomeController with fenix: true for auto-recovery
-    // Skip registration if already prepared to avoid "already registered" error
-    if (!Get.isRegistered<HomeController>()) {
-      Get.lazyPut<HomeController>(
-        () => HomeController(),
-        fenix: true,
-      );
-    } else {
-      print('[HomeBinding] HomeController already registered, skipping');
-    }
+    // Register HomeController - factory will be cleared on logout
+    Get.lazyPut<HomeController>(
+      () => HomeController(),
+    );
   }
 }

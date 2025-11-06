@@ -431,9 +431,8 @@ void main() {
       expect(authService.isAuthenticated, false);
     });
 
-    test('repeated login/logout cycles with fenix controllers should not throw registration errors', () async {
-      // Register features using the actual binding classes
-      // The bindings now have guards against repeated registration
+    test('repeated login/logout cycles should work without registration errors', () async {
+      // Register features with actual binding classes
       featureRegistry.registerFeature('home', HomeBinding());
       featureRegistry.registerFeature('todos', TodosBinding());
       
@@ -442,11 +441,14 @@ void main() {
       expect(authService.isAuthenticated, true);
       expect(authService.currentUser?.email, 'user1@example.com');
       
-      // First logout
+      // First logout - factories are cleared along with instances
       await authService.logout();
       expect(authService.isAuthenticated, false);
+      // Factories should be removed, not just instances
+      expect(Get.isRegistered<HomeController>(), false);
+      expect(Get.isRegistered<TodosController>(), false);
       
-      // Second login cycle - this should NOT throw "Lazy factory already registered"
+      // Second login cycle - factories are re-registered without errors
       await authService.login('user2@example.com', 'password');
       expect(authService.isAuthenticated, true);
       expect(authService.currentUser?.email, 'user2@example.com');
@@ -454,6 +456,8 @@ void main() {
       // Second logout
       await authService.logout();
       expect(authService.isAuthenticated, false);
+      expect(Get.isRegistered<HomeController>(), false);
+      expect(Get.isRegistered<TodosController>(), false);
       
       // Third login cycle - verify it still works
       await authService.login('user3@example.com', 'password');
