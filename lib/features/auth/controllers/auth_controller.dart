@@ -8,6 +8,9 @@ import '../services/auth_service.dart';
 class AuthController extends BaseController {
   static const tag = 'AuthController';
   
+  @override
+  String get controllerName => tag;
+  
   final AuthService _authService;
   
   final emailController = RxString('');

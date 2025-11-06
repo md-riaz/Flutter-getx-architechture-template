@@ -8,6 +8,9 @@ import '../../auth/services/auth_service.dart';
 class HomeController extends BaseController {
   static const tag = 'HomeController';
   
+  @override
+  String get controllerName => tag;
+  
   final AuthService _authService;
   
   final randomState = RxInt(0);

@@ -8,6 +8,9 @@ import '../services/todos_service.dart';
 class TodosController extends BaseController {
   static const tag = 'TodosController';
   
+  @override
+  String get controllerName => tag;
+  
   final TodosService _todosService;
   
   final titleController = RxString('');
