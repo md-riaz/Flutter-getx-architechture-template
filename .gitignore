@@ -49,9 +49,14 @@ app.*.map.json
 /android/gradle
 /android/gradlew
 /android/gradlew.bat
+/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
 
 # iOS related
 /ios/Pods/
 /ios/.symlinks/
 /ios/Flutter/Flutter.framework
 /ios/Flutter/Flutter.podspec
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+/ios/Runner/GeneratedPluginRegistrant.h
+/ios/Runner/GeneratedPluginRegistrant.m

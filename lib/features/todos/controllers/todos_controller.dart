@@ -89,18 +89,16 @@ class TodosController extends BaseController {
 
   /// Clear all todos
   void clearAll() {
-    Get.dialog(
-      Get.defaultDialog(
-        title: 'Clear All',
-        middleText: 'Are you sure you want to delete all todos?',
-        textConfirm: 'Yes',
-        textCancel: 'No',
-        onConfirm: () {
-          _todosService.clearAllTodos();
-          Get.back();
-          Get.snackbar('Success', 'All todos cleared');
-        },
-      ),
+    Get.defaultDialog(
+      title: 'Clear All',
+      middleText: 'Are you sure you want to delete all todos?',
+      textConfirm: 'Yes',
+      textCancel: 'No',
+      onConfirm: () {
+        _todosService.clearAllTodos();
+        Get.back();
+        Get.snackbar('Success', 'All todos cleared');
+      },
     );
   }
 }
