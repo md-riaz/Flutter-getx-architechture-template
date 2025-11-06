@@ -25,7 +25,8 @@ class FeatureRegistryService extends GetxService {
     print('[FeatureRegistryService] Deleting feature bindings');
     for (final entry in _registeredFeatures.entries) {
       print('[FeatureRegistryService] Deleting binding for: ${entry.key}');
-      // Delete all controllers associated with the feature
+      // Delete all controllers and services associated with the feature
+      // Services with matching tags will have onClose() called
       Get.delete(force: true, tag: entry.key);
     }
   }

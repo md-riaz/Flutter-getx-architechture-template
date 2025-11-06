@@ -8,10 +8,10 @@ class TodosBinding extends Bindings {
   void dependencies() {
     print('[TodosBinding] Setting up todos dependencies');
     
-    // Register TodosService as permanent (feature-level service)
+    // Register TodosService (not permanent, can be deleted on logout)
     Get.put<TodosService>(
       TodosService(),
-      permanent: true,
+      tag: 'todos',
     );
     
     // Register TodosController with fenix: true for auto-recovery

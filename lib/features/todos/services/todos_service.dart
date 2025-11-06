@@ -19,6 +19,14 @@ class TodosService extends GetxService {
     _loadTodos();
   }
 
+  @override
+  void onClose() {
+    print('[TodosService] onClose called - clearing all data');
+    _todoRepository.clear();
+    _todos.clear();
+    super.onClose();
+  }
+
   /// Load all todos from repository
   void _loadTodos() {
     _todos.value = _todoRepository.getAll();
