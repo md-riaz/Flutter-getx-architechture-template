@@ -39,9 +39,9 @@ class AuthController extends BaseController {
 
   @override
   void onClose() {
-    _isDisposed = true;
     _stateTimer?.cancel();
     _stateTimer = null;
+    _isDisposed = true;
     super.onClose();
   }
 
