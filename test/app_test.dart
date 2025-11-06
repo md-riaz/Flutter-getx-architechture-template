@@ -5,8 +5,10 @@ import 'package:flutter_getx_architecture/features/auth/services/auth_service.da
 import 'package:flutter_getx_architecture/features/auth/repositories/auth_repository.dart';
 import 'package:flutter_getx_architecture/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_getx_architecture/features/home/controllers/home_controller.dart';
+import 'package:flutter_getx_architecture/features/home/binding/home_binding.dart';
 import 'package:flutter_getx_architecture/features/todos/controllers/todos_controller.dart';
 import 'package:flutter_getx_architecture/features/todos/services/todos_service.dart';
+import 'package:flutter_getx_architecture/features/todos/binding/todos_binding.dart';
 
 void main() {
   group('AuthRepository Tests', () {
@@ -426,6 +428,55 @@ void main() {
       // Verify cleanup - controllers should be deleted without errors
       expect(Get.isRegistered<HomeController>(), false);
       expect(Get.isRegistered<TodosController>(), false);
+      expect(authService.isAuthenticated, false);
+    });
+
+    test('repeated login/logout cycles with fenix controllers should not throw registration errors', () async {
+      // Import the actual bindings instead of using BindingsBuilder
+      final homeBinding = Get.find<FeatureRegistryService>().getRegisteredFeatures().contains('home') 
+          ? null 
+          : HomeBinding();
+      final todosBinding = Get.find<FeatureRegistryService>().getRegisteredFeatures().contains('todos')
+          ? null
+          : TodosBinding();
+      
+      // Register features if not already registered
+      if (homeBinding != null) {
+        featureRegistry.registerFeature('home', homeBinding);
+      }
+      if (todosBinding != null) {
+        featureRegistry.registerFeature('todos', todosBinding);
+      }
+      
+      // First login cycle
+      await authService.login('user1@example.com', 'password');
+      expect(authService.isAuthenticated, true);
+      expect(authService.currentUser?.email, 'user1@example.com');
+      
+      // Verify controllers are registered (they'll be lazily initialized)
+      // After createFeatureBindings, the factory should be prepared but not instantiated yet
+      // isRegistered returns true even if just the factory is registered
+      
+      // First logout
+      await authService.logout();
+      expect(authService.isAuthenticated, false);
+      
+      // Second login cycle - this should NOT throw "Lazy factory already registered"
+      await authService.login('user2@example.com', 'password');
+      expect(authService.isAuthenticated, true);
+      expect(authService.currentUser?.email, 'user2@example.com');
+      
+      // Second logout
+      await authService.logout();
+      expect(authService.isAuthenticated, false);
+      
+      // Third login cycle - verify it still works
+      await authService.login('user3@example.com', 'password');
+      expect(authService.isAuthenticated, true);
+      expect(authService.currentUser?.email, 'user3@example.com');
+      
+      // Final logout
+      await authService.logout();
       expect(authService.isAuthenticated, false);
     });
   });

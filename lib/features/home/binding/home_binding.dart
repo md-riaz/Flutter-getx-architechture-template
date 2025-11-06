@@ -8,9 +8,14 @@ class HomeBinding extends Bindings {
     print('[HomeBinding] Setting up home dependencies');
     
     // Register HomeController with fenix: true for auto-recovery
-    Get.lazyPut<HomeController>(
-      () => HomeController(),
-      fenix: true,
-    );
+    // Skip registration if already prepared to avoid "already registered" error
+    if (!Get.isRegistered<HomeController>()) {
+      Get.lazyPut<HomeController>(
+        () => HomeController(),
+        fenix: true,
+      );
+    } else {
+      print('[HomeBinding] HomeController already registered, skipping');
+    }
   }
 }
