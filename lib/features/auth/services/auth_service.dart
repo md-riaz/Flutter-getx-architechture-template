@@ -5,8 +5,11 @@ import '../../../services/feature_registry_service.dart';
 
 /// Authentication service (permanent via bindings)
 class AuthService extends GetxService {
-  final AuthRepository _authRepository = AuthRepository();
+  final AuthRepository _authRepository;
   final _currentUser = Rxn<User>();
+
+  AuthService({AuthRepository? authRepository})
+      : _authRepository = authRepository ?? AuthRepository();
 
   User? get currentUser => _currentUser.value;
   bool get isAuthenticated => _currentUser.value != null;

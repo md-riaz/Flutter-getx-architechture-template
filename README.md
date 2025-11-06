@@ -108,6 +108,32 @@ flutter run -d ios         # iOS (macOS only)
 flutter test
 ```
 
+## Deployment
+
+### Web Deployment to GitHub Pages
+
+This project includes a GitHub Actions workflow for deploying the web version to GitHub Pages.
+
+#### Manual Deployment
+
+1. Go to the repository's Actions tab on GitHub
+2. Select "Deploy Flutter Web to GitHub Pages" workflow
+3. Click "Run workflow" button
+4. Select the branch you want to deploy
+5. Click "Run workflow" to start the deployment
+
+The workflow will:
+- Build the Flutter web application with the correct base-href
+- Configure GitHub Pages settings
+- Deploy the built web app to GitHub Pages
+
+Once deployed, the app will be available at: `https://<username>.github.io/Flutter-getx-architechture-test/`
+
+#### Requirements
+
+- GitHub Pages must be enabled for the repository
+- The workflow requires write permissions for the repository (already configured in the workflow file)
+
 ## Usage
 
 ### Login Flow
@@ -139,6 +165,19 @@ This app supports:
 - ✅ Web (Chrome, Firefox, Safari, Edge)
 
 ## Architecture Patterns
+
+### Dependency Injection
+All services and controllers use constructor-based dependency injection:
+- **AuthService**: Accepts `AuthRepository` via constructor
+- **AuthController**: Accepts `AuthService` via constructor
+- **HomeController**: Accepts `AuthService` via constructor
+- **TodosService**: Accepts `TodoRepository` via constructor
+- **TodosController**: Accepts `TodosService` via constructor
+
+This approach:
+- Makes code more testable by allowing mock dependencies
+- Follows SOLID principles and dependency inversion
+- Maintains backward compatibility with GetX bindings through optional parameters
 
 ### Feature-Based Services
 Services are now organized per feature:

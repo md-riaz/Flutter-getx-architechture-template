@@ -8,7 +8,7 @@ import '../services/auth_service.dart';
 class AuthController extends BaseController {
   static const tag = 'AuthController';
   
-  final AuthService _authService = Get.find<AuthService>();
+  final AuthService _authService;
   
   final emailController = RxString('');
   final passwordController = RxString('');
@@ -17,6 +17,9 @@ class AuthController extends BaseController {
   
   Timer? _stateTimer;
   final _random = Random();
+
+  AuthController({AuthService? authService})
+      : _authService = authService ?? Get.find<AuthService>();
 
   @override
   void onInit() {
@@ -65,5 +68,11 @@ class AuthController extends BaseController {
     } else {
       Get.snackbar('Error', 'Login failed');
     }
+  }
+
+  /// Handle logout
+  Future<void> logout() async {
+    await _authService.logout();
+    Get.offAllNamed('/login');
   }
 }
