@@ -37,20 +37,28 @@ class HomeController extends BaseController {
 
   @override
   void onClose() {
+    _isDisposed = true;
     _stateTimer?.cancel();
     _stateTimer = null;
-    _isDisposed = true;
     super.onClose();
   }
 
   /// Start timer to update random state periodically
   void _startRandomStateTimer() {
     _stateTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      // Exit early if controller is being disposed
-      if (_isDisposed) return;
+      // Exit early if controller is being disposed or closed
+      if (_isDisposed || isClosed) {
+        timer.cancel();
+        return;
+      }
       
-      randomState.value = _random.nextInt(100);
-      print('[HomeController] Random state updated: ${randomState.value}');
+      try {
+        randomState.value = _random.nextInt(100);
+        print('[HomeController] Random state updated: ${randomState.value}');
+      } catch (e) {
+        print('[HomeController] Error updating random state: $e');
+        timer.cancel();
+      }
     });
   }
 
