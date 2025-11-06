@@ -183,11 +183,12 @@ void main() {
       expect(Get.isRegistered<TodosService>(), false);
     });
 
-    test('bindings should not double-initialize when called multiple times', () {
+    test('feature registry should not re-initialize bindings on multiple calls', () {
       int initCount = 0;
       
       // Create a custom binding that tracks initialization
       final binding = BindingsBuilder(() {
+        // Bindings called via feature registry should only execute once
         if (!Get.isRegistered<String>()) {
           Get.put<String>('test-service');
           initCount++;
@@ -196,14 +197,14 @@ void main() {
       
       service.registerFeature('test', binding);
       
-      // Call createFeatureBindings multiple times
+      // First call - should initialize
       service.createFeatureBindings();
       expect(initCount, 1);
       expect(Get.isRegistered<String>(), true);
       
-      // Call again - should not re-initialize
+      // Second call - binding executes again but service already registered
       service.createFeatureBindings();
-      expect(initCount, 1, reason: 'Service should only be initialized once');
+      expect(initCount, 1, reason: 'Service should only be initialized once even if binding called multiple times');
     });
   });
 
