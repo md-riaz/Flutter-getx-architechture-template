@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import '../features/todos/controllers/todos_controller.dart';
-import '../features/todos/services/todos_service.dart';
+import '../controllers/todos_controller.dart';
+import '../services/todos_service.dart';
 
 /// Todos feature binding
 class TodosBinding extends Bindings {
@@ -8,7 +8,7 @@ class TodosBinding extends Bindings {
   void dependencies() {
     print('[TodosBinding] Setting up todos dependencies');
     
-    // Register TodosService (not permanent, can be deleted on logout)
+    // Register TodosService (not permanent, will be deleted on logout)
     Get.put<TodosService>(
       TodosService(),
     );

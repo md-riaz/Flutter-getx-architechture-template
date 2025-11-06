@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../features/home/controllers/home_controller.dart';
+import '../controllers/home_controller.dart';
 
 /// Home feature binding
 class HomeBinding extends Bindings {

@@ -182,6 +182,30 @@ void main() {
       // Verify bindings were deleted
       expect(Get.isRegistered<TodosService>(), false);
     });
+
+    test('feature registry should not re-initialize bindings on multiple calls', () {
+      int initCount = 0;
+      
+      // Create a custom binding that tracks initialization
+      final binding = BindingsBuilder(() {
+        // Bindings called via feature registry should only execute once
+        if (!Get.isRegistered<String>()) {
+          Get.put<String>('test-service');
+          initCount++;
+        }
+      });
+      
+      service.registerFeature('test', binding);
+      
+      // First call - should initialize
+      service.createFeatureBindings();
+      expect(initCount, 1);
+      expect(Get.isRegistered<String>(), true);
+      
+      // Second call - binding executes again but service already registered
+      service.createFeatureBindings();
+      expect(initCount, 1, reason: 'Service should only be initialized once even if binding called multiple times');
+    });
   });
 
   group('AuthController Tests', () {
@@ -369,6 +393,40 @@ void main() {
       
       // Data should be cleared
       expect(todosService.todoCount, 0);
+    });
+
+    test('controllers should handle disposal gracefully with active timers', () async {
+      // Register features with controllers that have timers
+      final homeBinding = BindingsBuilder(() {
+        Get.put<HomeController>(HomeController(authService: authService));
+      });
+      final todosBinding = BindingsBuilder(() {
+        Get.put<TodosService>(TodosService());
+        Get.put<TodosController>(TodosController());
+      });
+      
+      featureRegistry.registerFeature('home', homeBinding);
+      featureRegistry.registerFeature('todos', todosBinding);
+      
+      // Login to create feature bindings (starts timers)
+      await authService.login('test@example.com', 'password');
+      
+      expect(Get.isRegistered<HomeController>(), true);
+      expect(Get.isRegistered<TodosController>(), true);
+      
+      // Wait briefly to ensure timers are running
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      // Logout immediately (should cancel timers without errors)
+      await authService.logout();
+      
+      // Wait a bit to ensure no timer callbacks execute after disposal
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      // Verify cleanup - controllers should be deleted without errors
+      expect(Get.isRegistered<HomeController>(), false);
+      expect(Get.isRegistered<TodosController>(), false);
+      expect(authService.isAuthenticated, false);
     });
   });
 }

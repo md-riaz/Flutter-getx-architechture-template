@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../features/auth/controllers/auth_controller.dart';
+import '../controllers/auth_controller.dart';
 
 /// Auth feature binding
 class AuthBinding extends Bindings {
