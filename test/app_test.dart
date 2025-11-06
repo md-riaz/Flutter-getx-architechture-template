@@ -432,30 +432,15 @@ void main() {
     });
 
     test('repeated login/logout cycles with fenix controllers should not throw registration errors', () async {
-      // Import the actual bindings instead of using BindingsBuilder
-      final homeBinding = Get.find<FeatureRegistryService>().getRegisteredFeatures().contains('home') 
-          ? null 
-          : HomeBinding();
-      final todosBinding = Get.find<FeatureRegistryService>().getRegisteredFeatures().contains('todos')
-          ? null
-          : TodosBinding();
-      
-      // Register features if not already registered
-      if (homeBinding != null) {
-        featureRegistry.registerFeature('home', homeBinding);
-      }
-      if (todosBinding != null) {
-        featureRegistry.registerFeature('todos', todosBinding);
-      }
+      // Register features using the actual binding classes
+      // The bindings now have guards against repeated registration
+      featureRegistry.registerFeature('home', HomeBinding());
+      featureRegistry.registerFeature('todos', TodosBinding());
       
       // First login cycle
       await authService.login('user1@example.com', 'password');
       expect(authService.isAuthenticated, true);
       expect(authService.currentUser?.email, 'user1@example.com');
-      
-      // Verify controllers are registered (they'll be lazily initialized)
-      // After createFeatureBindings, the factory should be prepared but not instantiated yet
-      // isRegistered returns true even if just the factory is registered
       
       // First logout
       await authService.logout();
