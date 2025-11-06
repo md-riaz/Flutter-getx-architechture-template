@@ -8,13 +8,16 @@ import '../../auth/services/auth_service.dart';
 class HomeController extends BaseController {
   static const tag = 'HomeController';
   
-  final AuthService _authService = Get.find<AuthService>();
+  final AuthService _authService;
   
   final randomState = RxInt(0);
   final counter = RxInt(0);
   
   Timer? _stateTimer;
   final _random = Random();
+
+  HomeController({AuthService? authService})
+      : _authService = authService ?? Get.find<AuthService>();
 
   @override
   void onInit() {

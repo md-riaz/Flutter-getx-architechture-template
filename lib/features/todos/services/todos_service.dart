@@ -4,8 +4,11 @@ import '../repositories/todo_repository.dart';
 
 /// Todos service for managing todo operations
 class TodosService extends GetxService {
-  final TodoRepository _todoRepository = TodoRepository();
+  final TodoRepository _todoRepository;
   final _todos = <Todo>[].obs;
+
+  TodosService({TodoRepository? todoRepository})
+      : _todoRepository = todoRepository ?? TodoRepository();
 
   List<Todo> get todos => _todos;
   int get todoCount => _todos.length;

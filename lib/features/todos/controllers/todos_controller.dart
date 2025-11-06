@@ -8,7 +8,7 @@ import '../services/todos_service.dart';
 class TodosController extends BaseController {
   static const tag = 'TodosController';
   
-  final TodosService _todosService = Get.find<TodosService>();
+  final TodosService _todosService;
   
   final titleController = RxString('');
   final descriptionController = RxString('');
@@ -17,6 +17,9 @@ class TodosController extends BaseController {
   
   Timer? _stateTimer;
   final _random = Random();
+
+  TodosController({TodosService? todosService})
+      : _todosService = todosService ?? Get.find<TodosService>();
 
   List get todos => _todosService.todos;
   int get todoCount => _todosService.todoCount;
