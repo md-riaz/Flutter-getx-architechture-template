@@ -46,7 +46,7 @@ class AuthController extends BaseController {
   /// Start timer to update random state periodically
   void _startRandomStateTimer() {
     _stateTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      // Check if controller is still active by verifying timer wasn't cancelled
+      // Check if timer is still active before updating state
       if (!timer.isActive) {
         return;
       }
