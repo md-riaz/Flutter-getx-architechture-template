@@ -1,0 +1,18 @@
+[
+  {
+    "id": "ven_1",
+    "name": "ESOFTKING INFOTECH",
+    "gst": "19CVNPM7263B2X9",
+    "phone": "9002502002",
+    "email": "esoft@gmail.com",
+    "address": "Berhampore"
+  },
+  {
+    "id": "ven_2",
+    "name": "ROYAL COMPUTER",
+    "gst": "19CVNPM7263B1Z9",
+    "phone": "9679963388",
+    "email": "rcom@gmail.com",
+    "address": "Kolkata"
+  }
+]

@@ -1,10 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'binding/initial_bindings.dart';
-import 'theme/app_theme.dart';
-import 'util/app_routes.dart';
+import 'app/core/config/env.dart';
+import 'app/core/services/auth_service.dart';
+import 'app/core/services/json_db_service.dart';
+import 'app/core/services/number_series_service.dart';
+import 'app/core/services/tax_service.dart';
+import 'app/core/theme/app_theme.dart';
+import 'app/modules/dashboard/bindings/dashboard_binding.dart';
+import 'app/modules/dashboard/views/dashboard_view.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize core services
+  await Get.putAsync(() => JsonDbService().init());
+  Get.put(TaxService());
+  Get.put(NumberSeriesService());
+  Get.put(AuthService.mock(role: UserRole.admin));
+
+  print('[Main] App initialized with env: ${AppEnv.current.isDev ? "DEV" : "PROD"}');
+
   runApp(const MyApp());
 }
 
@@ -14,19 +29,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Flutter GetX Architecture',
+      title: 'Mobile Store',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      initialBinding: InitialBindings(),
-      initialRoute: AppRoutes.login,
-      getPages: AppRoutes.routes,
+      home: const DashboardView(),
+      initialBinding: DashboardBinding(),
       debugShowCheckedModeBanner: false,
-      onInit: () {
-        print('[MyApp] App initialized');
-        // Initialize feature registry after initial bindings
-        AppRoutes.initializeFeatureRegistry();
-      },
     );
   }
 }

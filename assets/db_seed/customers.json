@@ -1,0 +1,18 @@
+[
+  {
+    "id": "cust_1",
+    "name": "John Doe",
+    "phone": "9876543210",
+    "email": "john@example.com",
+    "address": "123 Main Street, Mumbai",
+    "gst": null
+  },
+  {
+    "id": "cust_2",
+    "name": "Jane Smith",
+    "phone": "9876543211",
+    "email": "jane@example.com",
+    "address": "456 Park Avenue, Delhi",
+    "gst": "27AABCU9603R1ZM"
+  }
+]
