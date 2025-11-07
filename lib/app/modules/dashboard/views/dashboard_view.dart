@@ -4,6 +4,8 @@ import '../../../../core/theme/tokens.dart';
 import '../../masters/vendors/views/vendor_list_view.dart';
 import '../../masters/brands/views/brand_list_view.dart';
 import '../../masters/customers/views/customer_list_view.dart';
+import '../../masters/models/views/phone_model_list_view.dart';
+import '../../stock/views/stock_list_view.dart';
 
 /// Dashboard view
 /// Main entry point showing key features and navigation
@@ -46,10 +48,7 @@ class DashboardView extends StatelessWidget {
             title: 'Models',
             icon: Icons.phone_android,
             color: Colors.green,
-            onTap: () {
-              // TODO: Navigate to models
-              Get.snackbar('Coming Soon', 'Models module will be available soon');
-            },
+            onTap: () => Get.to(() => const PhoneModelListView()),
           ),
           _DashboardCard(
             title: 'Customers',
@@ -70,10 +69,7 @@ class DashboardView extends StatelessWidget {
             title: 'Stock',
             icon: Icons.inventory,
             color: Colors.indigo,
-            onTap: () {
-              // TODO: Navigate to stock
-              Get.snackbar('Coming Soon', 'Stock module will be available soon');
-            },
+            onTap: () => Get.to(() => const StockListView()),
           ),
           _DashboardCard(
             title: 'Sales',
