@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../masters/vendors/views/vendor_list_view.dart';
+import '../../masters/brands/views/brand_list_view.dart';
 
 /// Dashboard view
 /// Main entry point showing key features and navigation
@@ -38,10 +39,7 @@ class DashboardView extends StatelessWidget {
             title: 'Brands',
             icon: Icons.branding_watermark,
             color: Colors.orange,
-            onTap: () {
-              // TODO: Navigate to brands
-              Get.snackbar('Coming Soon', 'Brands module will be available soon');
-            },
+            onTap: () => Get.to(() => const BrandListView()),
           ),
           _DashboardCard(
             title: 'Models',
