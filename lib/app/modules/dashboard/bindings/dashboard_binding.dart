@@ -4,6 +4,9 @@ import '../../masters/brands/bindings/brand_binding.dart';
 import '../../masters/customers/bindings/customer_binding.dart';
 import '../../masters/models/bindings/phone_model_binding.dart';
 import '../../stock/bindings/stock_binding.dart';
+import '../../sales/bindings/sales_binding.dart';
+import '../../reports/bindings/reports_binding.dart';
+import '../../settings/bindings/settings_binding.dart';
 
 /// Dashboard binding
 class DashboardBinding extends Bindings {
@@ -15,5 +18,8 @@ class DashboardBinding extends Bindings {
     CustomerBinding().dependencies();
     PhoneModelBinding().dependencies();
     StockBinding().dependencies();
+    SalesBinding().dependencies();
+    ReportsBinding().dependencies();
+    SettingsBinding().dependencies();
   }
 }

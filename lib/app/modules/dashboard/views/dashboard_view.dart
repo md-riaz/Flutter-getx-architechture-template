@@ -6,6 +6,9 @@ import '../../masters/brands/views/brand_list_view.dart';
 import '../../masters/customers/views/customer_list_view.dart';
 import '../../masters/models/views/phone_model_list_view.dart';
 import '../../stock/views/stock_list_view.dart';
+import '../../sales/views/sales_list_view.dart';
+import '../../reports/views/reports_view.dart';
+import '../../settings/views/settings_view.dart';
 
 /// Dashboard view
 /// Main entry point showing key features and navigation
@@ -19,10 +22,8 @@ class DashboardView extends StatelessWidget {
         title: const Text('Mobile Store'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              // TODO: Navigate to user profile
-            },
+            icon: const Icon(Icons.settings),
+            onPressed: () => Get.to(() => const SettingsView()),
           ),
         ],
       ),
@@ -61,7 +62,6 @@ class DashboardView extends StatelessWidget {
             icon: Icons.shopping_cart,
             color: Colors.teal,
             onTap: () {
-              // TODO: Navigate to purchases
               Get.snackbar('Coming Soon', 'Purchases module will be available soon');
             },
           ),
@@ -75,19 +75,13 @@ class DashboardView extends StatelessWidget {
             title: 'Sales',
             icon: Icons.point_of_sale,
             color: Colors.red,
-            onTap: () {
-              // TODO: Navigate to sales
-              Get.snackbar('Coming Soon', 'Sales module will be available soon');
-            },
+            onTap: () => Get.to(() => const SalesListView()),
           ),
           _DashboardCard(
             title: 'Reports',
             icon: Icons.analytics,
             color: Colors.brown,
-            onTap: () {
-              // TODO: Navigate to reports
-              Get.snackbar('Coming Soon', 'Reports module will be available soon');
-            },
+            onTap: () => Get.to(() => const ReportsView()),
           ),
         ],
       ),
