@@ -7,7 +7,7 @@ import '../controllers/vendor_controller.dart';
 
 /// Vendor form view
 /// Create or edit vendor
-class VendorFormView extends GetView<VendorController> {
+class VendorFormView extends StatelessWidget {
   final String? vendorId;
 
   const VendorFormView({super.key, this.vendorId});

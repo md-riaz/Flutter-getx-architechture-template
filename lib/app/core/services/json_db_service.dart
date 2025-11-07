@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
@@ -28,7 +29,9 @@ class JsonDbService extends GetxService {
     // Seed from assets if needed
     await _seedFromAssets();
 
-    print('[JsonDbService] Initialized at ${_dbDir.path}');
+    if (kDebugMode) {
+      debugPrint('[JsonDbService] Initialized at ${_dbDir.path}');
+    }
     return this;
   }
 
@@ -51,11 +54,15 @@ class JsonDbService extends GetxService {
         try {
           final assetData = await rootBundle.loadString('assets/db_seed/$fileName');
           await file.writeAsString(assetData);
-          print('[JsonDbService] Seeded $fileName from assets');
+          if (kDebugMode) {
+            debugPrint('[JsonDbService] Seeded $fileName from assets');
+          }
         } catch (e) {
           // If asset doesn't exist, create empty array
           await file.writeAsString('[]');
-          print('[JsonDbService] Created empty $fileName');
+          if (kDebugMode) {
+            debugPrint('[JsonDbService] Created empty $fileName');
+          }
         }
       }
     }

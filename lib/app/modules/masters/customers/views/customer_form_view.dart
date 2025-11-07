@@ -6,7 +6,7 @@ import '../../../../data/models/customer.dart';
 import '../controllers/customer_controller.dart';
 
 /// Customer form view
-class CustomerFormView extends GetView<CustomerController> {
+class CustomerFormView extends StatelessWidget {
   final String? customerId;
 
   const CustomerFormView({super.key, this.customerId});

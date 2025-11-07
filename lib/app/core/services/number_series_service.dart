@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'json_db_service.dart';
@@ -31,7 +32,9 @@ class NumberSeriesService extends GetxService {
     // Format: PREFIX-yyyyMMdd-###
     final number = '$prefix-$today-${counter.toString().padLeft(3, '0')}';
     
-    print('[NumberSeriesService] Generated $number');
+    if (kDebugMode) {
+      debugPrint('[NumberSeriesService] Generated $number');
+    }
     return number;
   }
 

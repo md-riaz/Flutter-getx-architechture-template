@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 /// User roles
@@ -65,7 +66,9 @@ class AuthService extends GetxService {
     );
 
     _currentUser.value = user;
-    print('[AuthService] User logged in: ${user.name} (${user.role.name})');
+    if (kDebugMode) {
+      debugPrint('[AuthService] User logged in: ${user.name} (${user.role.name})');
+    }
     
     return user;
   }
@@ -73,7 +76,9 @@ class AuthService extends GetxService {
   /// Logout
   void logout() {
     _currentUser.value = null;
-    print('[AuthService] User logged out');
+    if (kDebugMode) {
+      debugPrint('[AuthService] User logged out');
+    }
   }
 
   /// Check if user has specific role

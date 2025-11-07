@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'app/core/config/env.dart';
@@ -18,7 +19,9 @@ Future<void> main() async {
   Get.put(NumberSeriesService());
   Get.put(AuthService.mock(role: UserRole.admin));
 
-  print('[Main] App initialized with env: ${AppEnv.current.isDev ? "DEV" : "PROD"}');
+  if (kDebugMode) {
+    debugPrint('[Main] App initialized with env: ${AppEnv.current.isDev ? "DEV" : "PROD"}');
+  }
 
   runApp(const MyApp());
 }

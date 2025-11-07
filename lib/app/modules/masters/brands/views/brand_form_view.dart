@@ -6,7 +6,7 @@ import '../../../../data/models/brand.dart';
 import '../controllers/brand_controller.dart';
 
 /// Brand form view
-class BrandFormView extends GetView<BrandController> {
+class BrandFormView extends StatelessWidget {
   final String? brandId;
 
   const BrandFormView({super.key, this.brandId});

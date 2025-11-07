@@ -161,7 +161,7 @@ class BrandListView extends GetView<BrandController> {
           FilledButton(
             onPressed: () {
               Get.back();
-              Get.find<BrandController>().delete(id);
+              controller.delete(id);
             },
             child: const Text('Delete'),
           ),
