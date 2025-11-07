@@ -42,7 +42,7 @@ class _PurchaseCreateViewState extends State<PurchaseCreateView> {
 
   @override
   void initState() {
-    super.onInit();
+    super.initState();
     _loadData();
   }
 

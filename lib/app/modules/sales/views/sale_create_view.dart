@@ -106,24 +106,19 @@ class _SaleCreateViewState extends State<SaleCreateView> {
     // Calculate taxable amount
     _taxableAmount = _selectedUnits.fold(0.0, (sum, u) => sum + u.sellPrice);
 
-    // Calculate GST (assuming 18% total)
+    // Calculate GST using TaxService
     final taxService = Get.find<TaxService>();
-    final taxRate = 0.18;
+    
+    final taxCalc = taxService.calculate(
+      taxable: _taxableAmount,
+      taxRate: TaxService.gstRate18,
+      intraState: _intraState,
+    );
 
-    if (_intraState) {
-      // Intra-state: CGST + SGST
-      final tax = taxService.calculateIntraStateTax(_taxableAmount, taxRate);
-      _cgst = tax['cgst']!;
-      _sgst = tax['sgst']!;
-      _igst = 0.0;
-    } else {
-      // Inter-state: IGST
-      _igst = taxService.calculateInterStateTax(_taxableAmount, taxRate);
-      _cgst = 0.0;
-      _sgst = 0.0;
-    }
-
-    _totalAmount = _taxableAmount + _cgst + _sgst + _igst;
+    _cgst = taxCalc.cgst;
+    _sgst = taxCalc.sgst;
+    _igst = taxCalc.igst;
+    _totalAmount = taxCalc.total;
   }
 
   Future<void> _submitSale() async {
