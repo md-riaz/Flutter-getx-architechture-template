@@ -156,7 +156,10 @@ class StockListView extends GetView<StockController> {
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: _getStatusColor(unit.status),
-                      child: Icon(Icons.phone_android, color: Colors.white),
+                      child: Icon(
+                        Icons.phone_android,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                     ),
                     title: Text('IMEI: ${unit.imei}'),
                     subtitle: Column(
