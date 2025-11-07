@@ -59,6 +59,22 @@ class SalesRepo {
     await _db.writeList(_fileName, rows);
   }
 
+  /// Create sale and update product units status
+  Future<void> createWithUnits(Sale sale, List<String> imeiList) async {
+    // Save sale
+    await create(sale);
+
+    // Update product units to sold
+    final productUnits = await _db.readList('product_units');
+    for (var i = 0; i < productUnits.length; i++) {
+      if (imeiList.contains(productUnits[i]['imei'])) {
+        productUnits[i]['status'] = 'sold';
+        productUnits[i]['saleId'] = sale.id;
+      }
+    }
+    await _db.writeList('product_units', productUnits);
+  }
+
   /// Get sales statistics
   Future<Map<String, dynamic>> getStatistics() async {
     final items = await list();

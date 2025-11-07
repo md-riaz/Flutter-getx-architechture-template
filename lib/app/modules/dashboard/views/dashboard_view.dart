@@ -5,6 +5,7 @@ import '../../masters/vendors/views/vendor_list_view.dart';
 import '../../masters/brands/views/brand_list_view.dart';
 import '../../masters/customers/views/customer_list_view.dart';
 import '../../masters/models/views/phone_model_list_view.dart';
+import '../../purchases/views/purchases_list_view.dart';
 import '../../stock/views/stock_list_view.dart';
 import '../../sales/views/sales_list_view.dart';
 import '../../reports/views/reports_view.dart';
@@ -61,9 +62,7 @@ class DashboardView extends StatelessWidget {
             title: 'Purchases',
             icon: Icons.shopping_cart,
             color: Colors.teal,
-            onTap: () {
-              Get.snackbar('Coming Soon', 'Purchases module will be available soon');
-            },
+            onTap: () => Get.to(() => const PurchasesListView()),
           ),
           _DashboardCard(
             title: 'Stock',

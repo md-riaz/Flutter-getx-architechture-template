@@ -3,18 +3,18 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../core/state/ui_state.dart';
 import '../../../core/theme/tokens.dart';
-import '../controllers/sales_controller.dart';
-import 'sale_create_view.dart';
+import '../controllers/purchases_controller.dart';
+import 'purchase_create_view.dart';
 
-/// Sales list view
-class SalesListView extends GetView<SalesController> {
-  const SalesListView({super.key});
+/// Purchases list view
+class PurchasesListView extends GetView<PurchasesController> {
+  const PurchasesListView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sales'),
+        title: const Text('Purchases'),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(120),
           child: Column(
@@ -30,16 +30,17 @@ class SalesListView extends GetView<SalesController> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _StatColumn(
-                        label: 'Total Sales',
-                        value: stats['total_sales']?.toString() ?? '0',
+                        label: 'Total',
+                        value: stats['total_purchases']?.toString() ?? '0',
                       ),
                       _StatColumn(
-                        label: 'Revenue',
-                        value: '₹${NumberFormat('#,##0').format(stats['total_revenue'] ?? 0)}',
+                        label: 'Amount',
+                        value:
+                            '₹${NumberFormat('#,##0').format(stats['total_amount'] ?? 0)}',
                       ),
                       _StatColumn(
-                        label: 'Tax',
-                        value: '₹${NumberFormat('#,##0').format(stats['total_tax'] ?? 0)}',
+                        label: 'Items',
+                        value: stats['total_items']?.toString() ?? '0',
                       ),
                     ],
                   ),
@@ -48,7 +49,8 @@ class SalesListView extends GetView<SalesController> {
 
               // Search
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppTokens.spacing16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppTokens.spacing16),
                 child: TextField(
                   decoration: const InputDecoration(
                     hintText: 'Search by invoice number...',
@@ -66,54 +68,71 @@ class SalesListView extends GetView<SalesController> {
         final state = controller.state.value;
 
         return switch (state) {
-          Idle() => const Center(child: Text('Ready to load sales')),
+          Idle() => const Center(child: Text('Ready to load purchases')),
           Loading() => const Center(child: CircularProgressIndicator()),
           Empty() => Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.point_of_sale_outlined,
+                  Icon(Icons.shopping_cart_outlined,
                       size: AppTokens.iconSizeXLarge * 2,
                       color: Theme.of(context).colorScheme.secondary),
                   const SizedBox(height: AppTokens.spacing16),
-                  Text('No sales found',
+                  Text('No purchases found',
                       style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: AppTokens.spacing8),
-                  Text('Sales will appear here after transactions',
+                  Text('Add your first purchase to get started',
                       style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: AppTokens.spacing24),
+                  FilledButton.icon(
+                    onPressed: () =>
+                        Get.to(() => const PurchaseCreateView())?.then((_) {
+                      controller.refresh();
+                    }),
+                    icon: const Icon(Icons.add),
+                    label: const Text('New Purchase'),
+                  ),
                 ],
               ),
             ),
-          Ready(data: final sales) => ListView.builder(
-              itemCount: sales.length,
+          Ready(data: final purchases) => ListView.builder(
+              itemCount: purchases.length,
               padding: const EdgeInsets.all(AppTokens.spacing16),
               itemBuilder: (context, index) {
-                final sale = sales[index];
+                final purchase = purchases[index];
                 return Card(
                   margin: const EdgeInsets.only(bottom: AppTokens.spacing12),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primaryContainer,
                       child: Icon(Icons.receipt,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onPrimaryContainer),
                     ),
-                    title: Text(sale.invoiceNo),
+                    title: Text('Invoice: ${purchase.vendorInvoiceNo}'),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(DateFormat('dd MMM yyyy, HH:mm').format(sale.date)),
-                        Text('Taxable: ₹${NumberFormat('#,##0').format(sale.taxable)}'),
-                        if (sale.cgst > 0 || sale.sgst > 0)
-                          Text('CGST: ₹${NumberFormat('#,##0').format(sale.cgst)} + '
-                              'SGST: ₹${NumberFormat('#,##0').format(sale.sgst)}'),
-                        if (sale.igst > 0)
-                          Text('IGST: ₹${NumberFormat('#,##0').format(sale.igst)}'),
-                        Text('Total: ₹${NumberFormat('#,##0').format(sale.total)}',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.primary,
-                                )),
-                        Text('Payment: ${sale.payMode.toUpperCase()}'),
+                        Text(DateFormat('dd MMM yyyy').format(purchase.date)),
+                        Text(
+                          'Total: ₹${NumberFormat('#,##0').format(purchase.total)}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                        if (purchase.notes != null &&
+                            purchase.notes!.isNotEmpty)
+                          Text(
+                            purchase.notes!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                       ],
                     ),
                     isThreeLine: true,
@@ -128,7 +147,7 @@ class SalesListView extends GetView<SalesController> {
                   const Icon(Icons.error_outline,
                       size: AppTokens.iconSizeXLarge * 2, color: Colors.red),
                   const SizedBox(height: AppTokens.spacing16),
-                  Text('Error loading sales',
+                  Text('Error loading purchases',
                       style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: AppTokens.spacing8),
                   Text(msg,
@@ -146,14 +165,11 @@ class SalesListView extends GetView<SalesController> {
         };
       }),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Get.to(() => const SaleCreateView())?.then((_) {
-            controller.fetch();
-            controller.fetchStatistics();
-          });
-        },
+        onPressed: () => Get.to(() => const PurchaseCreateView())?.then((_) {
+          controller.refresh();
+        }),
         icon: const Icon(Icons.add),
-        label: const Text('New Sale'),
+        label: const Text('New Purchase'),
       ),
     );
   }

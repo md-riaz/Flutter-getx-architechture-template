@@ -3,6 +3,7 @@ import '../../masters/vendors/bindings/vendor_binding.dart';
 import '../../masters/brands/bindings/brand_binding.dart';
 import '../../masters/customers/bindings/customer_binding.dart';
 import '../../masters/models/bindings/phone_model_binding.dart';
+import '../../purchases/bindings/purchases_binding.dart';
 import '../../stock/bindings/stock_binding.dart';
 import '../../sales/bindings/sales_binding.dart';
 import '../../reports/bindings/reports_binding.dart';
@@ -17,6 +18,7 @@ class DashboardBinding extends Bindings {
     BrandBinding().dependencies();
     CustomerBinding().dependencies();
     PhoneModelBinding().dependencies();
+    PurchasesBinding().dependencies();
     StockBinding().dependencies();
     SalesBinding().dependencies();
     ReportsBinding().dependencies();
