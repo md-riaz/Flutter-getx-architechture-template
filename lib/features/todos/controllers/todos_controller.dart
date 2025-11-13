@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import '../../../base/base_controller.dart';
 import '../services/todos_service.dart';
+import '../../../util/snackbar.dart';
 
 /// Todos controller with random state via Timer
 class TodosController extends BaseController {
@@ -72,7 +74,7 @@ class TodosController extends BaseController {
   /// Create a new todo
   Future<void> createTodo() async {
     if (titleController.value.isEmpty) {
-      Get.snackbar('Error', 'Please enter a title');
+      AppSnackBar.error('Please enter a title', title: 'Error');
       return;
     }
 
@@ -87,8 +89,10 @@ class TodosController extends BaseController {
     titleController.value = '';
     descriptionController.value = '';
     
-    Get.back(); // Close dialog
-    Get.snackbar('Success', 'Todo created successfully');
+    if (Get.isDialogOpen == true) {
+      Get.back(); // Close dialog
+    }
+    AppSnackBar.success('Todo created successfully', title: 'Success');
   }
 
   /// Toggle todo completion
@@ -100,22 +104,37 @@ class TodosController extends BaseController {
   Future<void> deleteTodo(String id) async {
     final success = await _todosService.deleteTodo(id);
     if (success) {
-      Get.snackbar('Success', 'Todo deleted successfully');
+      AppSnackBar.success('Todo deleted successfully', title: 'Success');
     }
   }
 
   /// Clear all todos
   void clearAll() {
-    Get.defaultDialog(
-      title: 'Clear All',
-      middleText: 'Are you sure you want to delete all todos?',
-      textConfirm: 'Yes',
-      textCancel: 'No',
-      onConfirm: () {
-        _todosService.clearAllTodos();
-        Get.back();
-        Get.snackbar('Success', 'All todos cleared');
-      },
-    );
+    if (Get.overlayContext == null) {
+      print('[TodosController] Cannot show dialog - no overlay context');
+      return;
+    }
+    
+    // Use postFrameCallback to ensure safe dialog display
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.overlayContext == null || _isDisposed || isClosed) {
+        print('[TodosController] Cannot show dialog - context not available');
+        return;
+      }
+      
+      Get.defaultDialog(
+        title: 'Clear All',
+        middleText: 'Are you sure you want to delete all todos?',
+        textConfirm: 'Yes',
+        textCancel: 'No',
+        onConfirm: () {
+          _todosService.clearAllTodos();
+          if (Get.isDialogOpen == true) {
+            Get.back();
+          }
+          AppSnackBar.success('All todos cleared', title: 'Success');
+        },
+      );
+    });
   }
 }

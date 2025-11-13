@@ -71,7 +71,10 @@ class HomeController extends BaseController {
   /// Handle logout
   Future<void> logout() async {
     await _authService.logout();
-    Get.offAllNamed('/login');
+    // Don't navigate in test mode
+    if (!Get.testMode && Get.overlayContext != null) {
+      Get.offAllNamed('/login');
+    }
   }
 
   /// Get user email

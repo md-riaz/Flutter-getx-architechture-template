@@ -118,7 +118,20 @@ class TodosScreen extends GetView<TodosController> {
   }
 
   void _showAddTodoDialog() {
-    Get.dialog(
+    // Check if overlay context is available before showing dialog
+    if (Get.overlayContext == null) {
+      print('[TodosScreen] Cannot show dialog - no overlay context available');
+      return;
+    }
+    
+    // Use postFrameCallback to ensure dialog shows after current frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.overlayContext == null) {
+        print('[TodosScreen] Dialog canceled - overlay context lost');
+        return;
+      }
+      
+      Get.dialog(
       AlertDialog(
         title: const Text('Add New Todo'),
         content: Column(
@@ -148,7 +161,9 @@ class TodosScreen extends GetView<TodosController> {
             onPressed: () {
               controller.titleController.value = '';
               controller.descriptionController.value = '';
-              Get.back();
+              if (Get.isDialogOpen == true) {
+                Get.back();
+              }
             },
             child: const Text('Cancel'),
           ),
@@ -164,6 +179,7 @@ class TodosScreen extends GetView<TodosController> {
           )),
         ],
       ),
-    );
+      );
+    });
   }
 }

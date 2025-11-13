@@ -22,6 +22,8 @@ class MyApp extends StatelessWidget {
       initialRoute: AppRoutes.login,
       getPages: AppRoutes.routes,
       debugShowCheckedModeBanner: false,
+      // Ensure navigator key is set for proper overlay management
+      navigatorKey: Get.key,
       onInit: () {
         print('[MyApp] App initialized');
         // Initialize feature registry after initial bindings

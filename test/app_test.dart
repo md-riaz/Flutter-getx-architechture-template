@@ -236,6 +236,8 @@ void main() {
       controller.emailController.value = 'test@example.com';
       controller.passwordController.value = 'password';
       
+      // Note: Navigation and snackbars won't work in test mode without MaterialApp
+      // But authentication should still succeed
       await controller.login();
       
       expect(authService.isAuthenticated, true);
