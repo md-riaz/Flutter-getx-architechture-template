@@ -1,17 +1,34 @@
-/// User model for authentication
-class User {
+import '../../../domain/auth/entities/user.dart';
+
+class UserDto {
   final String id;
   final String name;
   final String email;
 
-  User({
+  const UserDto({
     required this.id,
     required this.name,
     required this.email,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) {
+  factory UserDto.fromDomain(User user) {
+    return UserDto(
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    );
+  }
+
+  User toDomain() {
     return User(
+      id: id,
+      name: name,
+      email: email,
+    );
+  }
+
+  factory UserDto.fromJson(Map<String, dynamic> json) {
+    return UserDto(
       id: json['id'] as String,
       name: json['name'] as String,
       email: json['email'] as String,
@@ -25,7 +42,4 @@ class User {
       'email': email,
     };
   }
-
-  @override
-  String toString() => 'User(id: $id, name: $name, email: $email)';
 }

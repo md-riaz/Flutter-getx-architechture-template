@@ -1,15 +1,22 @@
 import 'package:get/get.dart';
-import '../models/user.dart';
-import '../repositories/auth_repository.dart';
-import '../../../services/feature_registry_service.dart';
+import '../../../domain/auth/entities/user.dart';
+import '../../../domain/auth/usecases/get_current_user_use_case.dart';
+import '../../../domain/auth/usecases/login_use_case.dart';
+import '../../../domain/auth/usecases/logout_use_case.dart';
 
-/// Authentication service (permanent via bindings)
 class AuthService extends GetxService {
-  final AuthRepository _authRepository;
+  final LoginUseCase _loginUseCase;
+  final LogoutUseCase _logoutUseCase;
+  final GetCurrentUserUseCase _getCurrentUserUseCase;
   final _currentUser = Rxn<User>();
 
-  AuthService({AuthRepository? authRepository})
-      : _authRepository = authRepository ?? AuthRepository();
+  AuthService({
+    required LoginUseCase loginUseCase,
+    required LogoutUseCase logoutUseCase,
+    required GetCurrentUserUseCase getCurrentUserUseCase,
+  })  : _loginUseCase = loginUseCase,
+        _logoutUseCase = logoutUseCase,
+        _getCurrentUserUseCase = getCurrentUserUseCase;
 
   User? get currentUser => _currentUser.value;
   bool get isAuthenticated => _currentUser.value != null;
@@ -17,52 +24,23 @@ class AuthService extends GetxService {
   @override
   void onInit() {
     super.onInit();
-    print('[AuthService] onInit called');
+    _currentUser.value = _getCurrentUserUseCase();
   }
 
-  /// Login user
-  Future<bool> login(String email, String password) async {
-    try {
-      print('[AuthService] Attempting login for: $email');
-      
-      // Validate credentials
-      final isValid = await _authRepository.validate(email, password);
-      if (!isValid) {
-        print('[AuthService] Invalid credentials');
-        return false;
-      }
-
-      // Login and get user
-      final user = await _authRepository.login(email, password);
-      _currentUser.value = user;
-      
-      // Create feature bindings on login
-      final featureRegistry = Get.find<FeatureRegistryService>();
-      featureRegistry.createFeatureBindings();
-      
-      print('[AuthService] Login successful for: ${user.email}');
-      return true;
-    } catch (e) {
-      print('[AuthService] Login error: $e');
-      return false;
-    }
+  Future<User> login(String email, String password) async {
+    final user = await _loginUseCase(
+      LoginParams(email: email, password: password),
+    );
+    _currentUser.value = user;
+    return user;
   }
 
-  /// Logout user
   Future<void> logout() async {
-    try {
-      print('[AuthService] Logging out');
-      
-      // Delete feature bindings on logout
-      final featureRegistry = Get.find<FeatureRegistryService>();
-      featureRegistry.deleteFeatureBindings();
-      
-      await _authRepository.logout();
-      _currentUser.value = null;
-      
-      print('[AuthService] Logout successful');
-    } catch (e) {
-      print('[AuthService] Logout error: $e');
-    }
+    await _logoutUseCase();
+    _currentUser.value = null;
+  }
+
+  void updateCachedUser(User? user) {
+    _currentUser.value = user;
   }
 }

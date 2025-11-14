@@ -1,5 +1,6 @@
-/// Todo model for task management
-class Todo {
+import '../../../domain/todos/entities/todo.dart';
+
+class TodoDto {
   final String id;
   final String title;
   final String description;
@@ -7,36 +8,39 @@ class Todo {
   final DateTime createdAt;
   final DateTime? completedAt;
 
-  Todo({
+  const TodoDto({
     required this.id,
     required this.title,
     required this.description,
-    this.isCompleted = false,
+    required this.isCompleted,
     required this.createdAt,
     this.completedAt,
   });
 
-  /// Create a copy with updated fields
-  Todo copyWith({
-    String? id,
-    String? title,
-    String? description,
-    bool? isCompleted,
-    DateTime? createdAt,
-    DateTime? completedAt,
-  }) {
-    return Todo(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      isCompleted: isCompleted ?? this.isCompleted,
-      createdAt: createdAt ?? this.createdAt,
-      completedAt: completedAt ?? this.completedAt,
+  factory TodoDto.fromDomain(Todo todo) {
+    return TodoDto(
+      id: todo.id,
+      title: todo.title,
+      description: todo.description,
+      isCompleted: todo.isCompleted,
+      createdAt: todo.createdAt,
+      completedAt: todo.completedAt,
     );
   }
 
-  factory Todo.fromJson(Map<String, dynamic> json) {
+  Todo toDomain() {
     return Todo(
+      id: id,
+      title: title,
+      description: description,
+      isCompleted: isCompleted,
+      createdAt: createdAt,
+      completedAt: completedAt,
+    );
+  }
+
+  factory TodoDto.fromJson(Map<String, dynamic> json) {
+    return TodoDto(
       id: json['id'] as String,
       title: json['title'] as String,
       description: json['description'] as String,
@@ -58,7 +62,4 @@ class Todo {
       'completedAt': completedAt?.toIso8601String(),
     };
   }
-
-  @override
-  String toString() => 'Todo(id: $id, title: $title, isCompleted: $isCompleted)';
 }

@@ -1,98 +1,100 @@
 import 'package:get/get.dart';
-import '../models/todo.dart';
-import '../repositories/todo_repository.dart';
+import '../../../domain/todos/entities/todo.dart';
+import '../../../domain/todos/usecases/clear_todos_use_case.dart';
+import '../../../domain/todos/usecases/create_todo_use_case.dart';
+import '../../../domain/todos/usecases/delete_todo_use_case.dart';
+import '../../../domain/todos/usecases/fetch_todos_use_case.dart';
+import '../../../domain/todos/usecases/toggle_todo_completion_use_case.dart';
+import '../../../domain/todos/usecases/update_todo_use_case.dart';
 
-/// Todos service for managing todo operations
 class TodosService extends GetxService {
-  final TodoRepository _todoRepository;
+  final FetchTodosUseCase _fetchTodosUseCase;
+  final CreateTodoUseCase _createTodoUseCase;
+  final UpdateTodoUseCase _updateTodoUseCase;
+  final DeleteTodoUseCase _deleteTodoUseCase;
+  final ToggleTodoCompletionUseCase _toggleTodoCompletionUseCase;
+  final ClearTodosUseCase _clearTodosUseCase;
+
   final _todos = <Todo>[].obs;
 
-  TodosService({TodoRepository? todoRepository})
-      : _todoRepository = todoRepository ?? TodoRepository();
+  TodosService({
+    required FetchTodosUseCase fetchTodosUseCase,
+    required CreateTodoUseCase createTodoUseCase,
+    required UpdateTodoUseCase updateTodoUseCase,
+    required DeleteTodoUseCase deleteTodoUseCase,
+    required ToggleTodoCompletionUseCase toggleTodoCompletionUseCase,
+    required ClearTodosUseCase clearTodosUseCase,
+  })  : _fetchTodosUseCase = fetchTodosUseCase,
+        _createTodoUseCase = createTodoUseCase,
+        _updateTodoUseCase = updateTodoUseCase,
+        _deleteTodoUseCase = deleteTodoUseCase,
+        _toggleTodoCompletionUseCase = toggleTodoCompletionUseCase,
+        _clearTodosUseCase = clearTodosUseCase;
 
-  List<Todo> get todos => _todos;
+  RxList<Todo> get todos => _todos;
   int get todoCount => _todos.length;
-  int get completedCount => _todos.where((t) => t.isCompleted).length;
-  int get pendingCount => _todos.where((t) => !t.isCompleted).length;
+  int get completedCount =>
+      _todos.where((todo) => todo.isCompleted).length;
+  int get pendingCount =>
+      _todos.where((todo) => !todo.isCompleted).length;
 
-  @override
-  void onInit() {
-    super.onInit();
-    print('[TodosService] onInit called');
-    _loadTodos();
+  Future<void> loadTodos() async {
+    final results = await _fetchTodosUseCase();
+    _todos.assignAll(results);
   }
 
-  @override
-  void onClose() {
-    print('[TodosService] onClose called - clearing all data');
-    _todoRepository.clear();
-    _todos.clear();
-    super.onClose();
-  }
-
-  /// Load all todos from repository
-  void _loadTodos() {
-    _todos.value = _todoRepository.getAll();
-    print('[TodosService] Loaded ${_todos.length} todos');
-  }
-
-  /// Create a new todo
   Future<Todo> createTodo(String title, String description) async {
-    print('[TodosService] Creating todo: $title');
-    final todo = await _todoRepository.create(title, description);
-    _loadTodos();
+    final todo = await _createTodoUseCase(
+      CreateTodoParams(title: title, description: description),
+    );
+    _todos.add(todo);
     return todo;
   }
 
-  /// Update a todo
   Future<Todo?> updateTodo(
     String id, {
     String? title,
     String? description,
     bool? isCompleted,
   }) async {
-    print('[TodosService] Updating todo: $id');
-    final todo = await _todoRepository.update(
-      id,
-      title: title,
-      description: description,
-      isCompleted: isCompleted,
+    final todo = await _updateTodoUseCase(
+      UpdateTodoParams(
+        id: id,
+        title: title,
+        description: description,
+        isCompleted: isCompleted,
+      ),
     );
-    _loadTodos();
+    if (todo != null) {
+      final index = _todos.indexWhere((item) => item.id == todo.id);
+      if (index != -1) {
+        _todos[index] = todo;
+      }
+    }
     return todo;
   }
 
-  /// Delete a todo
   Future<bool> deleteTodo(String id) async {
-    print('[TodosService] Deleting todo: $id');
-    final success = await _todoRepository.delete(id);
-    if (success) {
-      _loadTodos();
+    final deleted = await _deleteTodoUseCase(id);
+    if (deleted) {
+      _todos.removeWhere((todo) => todo.id == id);
     }
-    return success;
+    return deleted;
   }
 
-  /// Toggle todo completion
-  Future<void> toggleTodoComplete(String id) async {
-    print('[TodosService] Toggling todo completion: $id');
-    await _todoRepository.toggleComplete(id);
-    _loadTodos();
+  Future<Todo?> toggleTodoComplete(String id) async {
+    final todo = await _toggleTodoCompletionUseCase(id);
+    if (todo != null) {
+      final index = _todos.indexWhere((item) => item.id == todo.id);
+      if (index != -1) {
+        _todos[index] = todo;
+      }
+    }
+    return todo;
   }
 
-  /// Get completed todos
-  List<Todo> getCompletedTodos() {
-    return _todos.where((t) => t.isCompleted).toList();
-  }
-
-  /// Get pending todos
-  List<Todo> getPendingTodos() {
-    return _todos.where((t) => !t.isCompleted).toList();
-  }
-
-  /// Clear all todos
-  void clearAllTodos() {
-    print('[TodosService] Clearing all todos');
-    _todoRepository.clear();
-    _loadTodos();
+  Future<void> clearAllTodos() async {
+    await _clearTodosUseCase();
+    _todos.clear();
   }
 }

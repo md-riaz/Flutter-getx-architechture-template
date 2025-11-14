@@ -1,15 +1,18 @@
 import 'package:get/get.dart';
+import '../../../domain/auth/usecases/get_current_user_use_case.dart';
+import '../../../domain/auth/usecases/logout_use_case.dart';
+import '../../auth/services/auth_service.dart';
 import '../controllers/home_controller.dart';
 
-/// Home feature binding
 class HomeBinding extends Bindings {
   @override
   void dependencies() {
-    print('[HomeBinding] Setting up home dependencies');
-    
-    // Register HomeController - factory will be cleared on logout
     Get.lazyPut<HomeController>(
-      () => HomeController(),
+      () => HomeController(
+        getCurrentUserUseCase: Get.find<GetCurrentUserUseCase>(),
+        logoutUseCase: Get.find<LogoutUseCase>(),
+        authService: Get.find<AuthService>(),
+      ),
     );
   }
 }

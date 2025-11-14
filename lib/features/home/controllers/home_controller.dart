@@ -1,84 +1,51 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:get/get.dart';
 import '../../../base/base_controller.dart';
+import '../../../domain/auth/entities/user.dart';
+import '../../../domain/auth/usecases/get_current_user_use_case.dart';
+import '../../../domain/auth/usecases/logout_use_case.dart';
 import '../../auth/services/auth_service.dart';
 
-/// Home controller with random state via Timer
 class HomeController extends BaseController {
   static const tag = 'HomeController';
-  
+
   @override
   String get controllerName => tag;
-  
-  final AuthService _authService;
-  
-  final randomState = RxInt(0);
-  final counter = RxInt(0);
-  
-  Timer? _stateTimer;
-  final _random = Random();
-  bool _isDisposed = false;
 
-  HomeController({AuthService? authService})
-      : _authService = authService ?? Get.find<AuthService>();
+  final GetCurrentUserUseCase _getCurrentUserUseCase;
+  final LogoutUseCase _logoutUseCase;
+  final AuthService _authService;
+
+  final user = Rxn<User>();
+  final isProcessing = false.obs;
+  final errorMessage = RxnString();
+
+  HomeController({
+    required GetCurrentUserUseCase getCurrentUserUseCase,
+    required LogoutUseCase logoutUseCase,
+    required AuthService authService,
+  })  : _getCurrentUserUseCase = getCurrentUserUseCase,
+        _logoutUseCase = logoutUseCase,
+        _authService = authService;
 
   @override
   void onInit() {
     super.onInit();
-    _startRandomStateTimer();
+    user.value = _getCurrentUserUseCase();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-    print('[HomeController] Ready to display home screen');
-  }
-
-  @override
-  void onClose() {
-    _isDisposed = true;
-    _stateTimer?.cancel();
-    _stateTimer = null;
-    super.onClose();
-  }
-
-  /// Start timer to update random state periodically
-  void _startRandomStateTimer() {
-    _stateTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      // Exit early if controller is being disposed or closed
-      if (_isDisposed || isClosed) {
-        timer.cancel();
-        return;
-      }
-      
-      try {
-        randomState.value = _random.nextInt(100);
-        print('[HomeController] Random state updated: ${randomState.value}');
-      } catch (e) {
-        print('[HomeController] Error updating random state: $e');
-        timer.cancel();
-      }
-    });
-  }
-
-  /// Increment counter
-  void incrementCounter() {
-    counter.value++;
-    print('[HomeController] Counter incremented: ${counter.value}');
-  }
-
-  /// Handle logout
-  Future<void> logout() async {
-    await _authService.logout();
-    // Don't navigate in test mode
-    if (!Get.testMode && Get.overlayContext != null) {
-      Get.offAllNamed('/login');
+  Future<bool> logout() async {
+    isProcessing.value = true;
+    errorMessage.value = null;
+    try {
+      await _logoutUseCase();
+      _authService.updateCachedUser(null);
+      user.value = null;
+      return true;
+    } catch (_) {
+      errorMessage.value = 'Unable to logout. Please try again.';
+      return false;
+    } finally {
+      isProcessing.value = false;
     }
-  }
-
-  /// Get user email
-  String getUserEmail() {
-    return _authService.currentUser?.email ?? 'Unknown';
   }
 }

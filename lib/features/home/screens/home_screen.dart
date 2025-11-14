@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/home_controller.dart';
 import '../../../services/theme_service.dart';
+import '../../../util/app_routes.dart';
+import '../controllers/home_controller.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -9,24 +10,44 @@ class HomeScreen extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     final themeService = Get.find<ThemeService>();
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           Obx(() => IconButton(
-            icon: Icon(
-              themeService.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-            ),
-            onPressed: themeService.toggleTheme,
-            tooltip: 'Toggle Theme',
-          )),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: controller.logout,
-            tooltip: 'Logout',
-          ),
+                icon: Icon(
+                  themeService.isDarkMode
+                      ? Icons.light_mode
+                      : Icons.dark_mode,
+                ),
+                onPressed: themeService.toggleTheme,
+                tooltip: 'Toggle Theme',
+              )),
+          Obx(() => IconButton(
+                icon: controller.isProcessing.value
+                    ? const CircularProgressIndicator()
+                    : const Icon(Icons.logout),
+                onPressed: controller.isProcessing.value
+                    ? null
+                    : () async {
+                        final success = await controller.logout();
+                        if (success) {
+                          if (!Get.testMode) {
+                            Get.offAllNamed(AppRoutes.login);
+                          }
+                        } else if (!Get.testMode) {
+                          Get.snackbar(
+                            'Logout',
+                            controller.errorMessage.value ??
+                                'Unable to logout. Please try again.',
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                        }
+                      },
+                tooltip: 'Logout',
+              )),
         ],
       ),
       body: Center(
@@ -43,40 +64,33 @@ class HomeScreen extends GetView<HomeController> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                'User: ${controller.getUserEmail()}',
-                style: const TextStyle(fontSize: 18),
-              ),
+              Obx(() {
+                final user = controller.user.value;
+                return Text(
+                  'User: ${user?.email ?? 'Unknown'}',
+                  style: const TextStyle(fontSize: 18),
+                );
+              }),
               const SizedBox(height: 40),
-              Obx(() => Text(
-                'Counter: ${controller.counter.value}',
-                style: const TextStyle(fontSize: 24),
-              )),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: controller.incrementCounter,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(200, 50),
-                ),
-                child: const Text('Increment Counter'),
-              ),
-              const SizedBox(height: 20),
               ElevatedButton.icon(
-                onPressed: () => Get.toNamed('/todos'),
+                onPressed: () => Get.toNamed(AppRoutes.todos),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(200, 50),
                 ),
                 icon: const Icon(Icons.check_box),
                 label: const Text('Go to Todos'),
               ),
-              const SizedBox(height: 40),
-              Obx(() => Text(
-                'Random State: ${controller.randomState.value}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              )),
+              const SizedBox(height: 20),
+              Obx(() {
+                final message = controller.errorMessage.value;
+                if (message == null) {
+                  return const SizedBox.shrink();
+                }
+                return Text(
+                  message,
+                  style: const TextStyle(color: Colors.red),
+                );
+              }),
             ],
           ),
         ),

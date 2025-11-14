@@ -1,474 +1,171 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:flutter_getx_architecture/services/feature_registry_service.dart';
-import 'package:flutter_getx_architecture/features/auth/services/auth_service.dart';
-import 'package:flutter_getx_architecture/features/auth/repositories/auth_repository.dart';
+import 'package:flutter_getx_architecture/data/auth/datasources/auth_local_data_source.dart';
+import 'package:flutter_getx_architecture/data/auth/datasources/auth_remote_data_source.dart';
+import 'package:flutter_getx_architecture/data/auth/repositories/auth_repository_impl.dart';
+import 'package:flutter_getx_architecture/data/todos/datasources/todo_local_data_source.dart';
+import 'package:flutter_getx_architecture/data/todos/datasources/todo_remote_data_source.dart';
+import 'package:flutter_getx_architecture/data/todos/repositories/todo_repository_impl.dart';
+import 'package:flutter_getx_architecture/domain/auth/repositories/auth_repository.dart';
+import 'package:flutter_getx_architecture/domain/auth/usecases/get_current_user_use_case.dart';
+import 'package:flutter_getx_architecture/domain/auth/usecases/login_use_case.dart';
+import 'package:flutter_getx_architecture/domain/auth/usecases/logout_use_case.dart';
+import 'package:flutter_getx_architecture/domain/todos/repositories/todo_repository.dart';
+import 'package:flutter_getx_architecture/domain/todos/usecases/clear_todos_use_case.dart';
+import 'package:flutter_getx_architecture/domain/todos/usecases/create_todo_use_case.dart';
+import 'package:flutter_getx_architecture/domain/todos/usecases/delete_todo_use_case.dart';
+import 'package:flutter_getx_architecture/domain/todos/usecases/fetch_todos_use_case.dart';
+import 'package:flutter_getx_architecture/domain/todos/usecases/toggle_todo_completion_use_case.dart';
+import 'package:flutter_getx_architecture/domain/todos/usecases/update_todo_use_case.dart';
 import 'package:flutter_getx_architecture/features/auth/controllers/auth_controller.dart';
-import 'package:flutter_getx_architecture/features/home/controllers/home_controller.dart';
-import 'package:flutter_getx_architecture/features/home/binding/home_binding.dart';
+import 'package:flutter_getx_architecture/features/auth/services/auth_service.dart';
 import 'package:flutter_getx_architecture/features/todos/controllers/todos_controller.dart';
 import 'package:flutter_getx_architecture/features/todos/services/todos_service.dart';
-import 'package:flutter_getx_architecture/features/todos/binding/todos_binding.dart';
 
 void main() {
-  group('AuthRepository Tests', () {
+  setUp(() {
+    Get.testMode = true;
+  });
+
+  tearDown(() {
+    Get.reset();
+  });
+
+  group('Auth domain integration', () {
     late AuthRepository authRepository;
+    late LoginUseCase loginUseCase;
+    late LogoutUseCase logoutUseCase;
+    late GetCurrentUserUseCase getCurrentUserUseCase;
+    late AuthService authService;
 
     setUp(() {
-      authRepository = AuthRepository();
+      final remote = FakeAuthRemoteDataSource();
+      final local = InMemoryAuthLocalDataSource();
+      authRepository = AuthRepositoryImpl(
+        remoteDataSource: remote,
+        localDataSource: local,
+      );
+      loginUseCase = LoginUseCase(authRepository);
+      logoutUseCase = LogoutUseCase(authRepository);
+      getCurrentUserUseCase = GetCurrentUserUseCase(authRepository);
+      authService = AuthService(
+        loginUseCase: loginUseCase,
+        logoutUseCase: logoutUseCase,
+        getCurrentUserUseCase: getCurrentUserUseCase,
+      );
     });
 
-    test('validate should always return true', () async {
-      final result = await authRepository.validate('test@example.com', 'password');
-      expect(result, true);
-    });
+    test('login use case authenticates user', () async {
+      final user = await loginUseCase(
+        const LoginParams(
+          email: 'test@example.com',
+          password: 'password',
+        ),
+      );
 
-    test('login should create user in memory', () async {
-      final user = await authRepository.login('test@example.com', 'password');
       expect(user.email, 'test@example.com');
-      expect(user.name, 'test');
-      expect(authRepository.isAuthenticated(), true);
+      expect(getCurrentUserUseCase()?.email, 'test@example.com');
     });
 
-    test('logout should clear user from memory', () async {
-      await authRepository.login('test@example.com', 'password');
-      expect(authRepository.isAuthenticated(), true);
-      
-      await authRepository.logout();
-      expect(authRepository.isAuthenticated(), false);
-    });
-  });
+    test('auth controller updates service on login and logout', () async {
+      final controller = AuthController(
+        loginUseCase: loginUseCase,
+        logoutUseCase: logoutUseCase,
+        getCurrentUserUseCase: getCurrentUserUseCase,
+        authService: authService,
+      );
 
-  group('AuthService Tests', () {
-    late AuthService authService;
-    late FeatureRegistryService featureRegistry;
+      controller.onInit();
 
-    setUp(() {
-      Get.testMode = true;
-      featureRegistry = FeatureRegistryService();
-      Get.put<FeatureRegistryService>(featureRegistry, permanent: true);
-      authService = AuthService();
-    });
+      controller.email.value = 'user@example.com';
+      controller.password.value = 'secret';
 
-    tearDown(() {
-      Get.reset();
-    });
+      final loginSuccess = await controller.login();
+      expect(loginSuccess, isTrue);
+      expect(authService.currentUser?.email, 'user@example.com');
 
-    test('should inject AuthRepository via constructor', () {
-      final mockRepository = AuthRepository();
-      final service = AuthService(authRepository: mockRepository);
-      expect(service, isNotNull);
-    });
-
-    test('login should authenticate user and create feature bindings', () async {
-      // Register a test feature
-      final binding = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService());
-      });
-      featureRegistry.registerFeature('todos', binding);
-
-      // Perform login
-      final success = await authService.login('test@example.com', 'password');
-      
-      expect(success, true);
-      expect(authService.isAuthenticated, true);
-      expect(authService.currentUser?.email, 'test@example.com');
-      
-      // Verify feature bindings were created
-      expect(Get.isRegistered<TodosService>(), true);
-    });
-
-    test('logout should clear user and delete feature bindings', () async {
-      // Register and create feature bindings
-      final binding = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService());
-      });
-      featureRegistry.registerFeature('todos', binding);
-      
-      // Login first
-      await authService.login('test@example.com', 'password');
-      expect(authService.isAuthenticated, true);
-      expect(Get.isRegistered<TodosService>(), true);
-      
-      // Logout
-      await authService.logout();
-      
-      expect(authService.isAuthenticated, false);
-      expect(authService.currentUser, isNull);
-      // Feature bindings should be deleted
-      expect(Get.isRegistered<TodosService>(), false);
-    });
-
-    test('isAuthenticated should return false initially', () {
-      expect(authService.isAuthenticated, false);
+      final logoutSuccess = await controller.logout();
+      expect(logoutSuccess, isTrue);
       expect(authService.currentUser, isNull);
     });
   });
 
-  group('FeatureRegistryService Tests', () {
-    late FeatureRegistryService service;
+  group('Todos controller integration', () {
+    late TodoRepository todoRepository;
+    late FetchTodosUseCase fetchTodosUseCase;
+    late CreateTodoUseCase createTodoUseCase;
+    late UpdateTodoUseCase updateTodoUseCase;
+    late DeleteTodoUseCase deleteTodoUseCase;
+    late ToggleTodoCompletionUseCase toggleTodoCompletionUseCase;
+    late ClearTodosUseCase clearTodosUseCase;
+    late TodosService todosService;
+    late TodosController controller;
 
     setUp(() {
-      Get.testMode = true;
-      service = FeatureRegistryService();
+      final remote = FakeTodoRemoteDataSource();
+      final local = InMemoryTodoLocalDataSource();
+      todoRepository = TodoRepositoryImpl(
+        remoteDataSource: remote,
+        localDataSource: local,
+      );
+      fetchTodosUseCase = FetchTodosUseCase(todoRepository);
+      createTodoUseCase = CreateTodoUseCase(todoRepository);
+      updateTodoUseCase = UpdateTodoUseCase(todoRepository);
+      deleteTodoUseCase = DeleteTodoUseCase(todoRepository);
+      toggleTodoCompletionUseCase = ToggleTodoCompletionUseCase(todoRepository);
+      clearTodosUseCase = ClearTodosUseCase(todoRepository);
+      todosService = TodosService(
+        fetchTodosUseCase: fetchTodosUseCase,
+        createTodoUseCase: createTodoUseCase,
+        updateTodoUseCase: updateTodoUseCase,
+        deleteTodoUseCase: deleteTodoUseCase,
+        toggleTodoCompletionUseCase: toggleTodoCompletionUseCase,
+        clearTodosUseCase: clearTodosUseCase,
+      );
+      controller = TodosController(
+        fetchTodosUseCase: fetchTodosUseCase,
+        createTodoUseCase: createTodoUseCase,
+        updateTodoUseCase: updateTodoUseCase,
+        deleteTodoUseCase: deleteTodoUseCase,
+        toggleTodoCompletionUseCase: toggleTodoCompletionUseCase,
+        clearTodosUseCase: clearTodosUseCase,
+        todosService: todosService,
+      );
+      controller.onInit();
     });
 
-    tearDown(() {
-      Get.reset();
+    test('create todo stores item locally', () async {
+      controller.title.value = 'My Task';
+      controller.description.value = 'Write tests';
+
+      final created = await controller.createTodo();
+
+      expect(created, isTrue);
+      expect(controller.todos.length, 1);
+      expect(controller.todoCount, 1);
     });
 
-    test('should register feature', () {
-      final binding = BindingsBuilder(() {});
-      
-      service.registerFeature('test', binding);
-      
-      expect(service.getRegisteredFeatures(), contains('test'));
+    test('toggle todo updates completion state', () async {
+      controller.title.value = 'Complete me';
+      controller.description.value = '';
+      await controller.createTodo();
+      final todoId = controller.todos.first.id;
+
+      final toggled = await controller.toggleTodo(todoId);
+
+      expect(toggled, isTrue);
+      expect(controller.todos.first.isCompleted, isTrue);
     });
 
-    test('should clear features', () {
-      final binding = BindingsBuilder(() {});
-      
-      service.registerFeature('test', binding);
-      expect(service.getRegisteredFeatures().length, 1);
-      
-      service.clearFeatures();
-      expect(service.getRegisteredFeatures().length, 0);
-    });
+    test('clear all removes todos', () async {
+      controller.title.value = 'Cleanup';
+      controller.description.value = '';
+      await controller.createTodo();
 
-    test('should register multiple features', () {
-      final binding1 = BindingsBuilder(() {});
-      final binding2 = BindingsBuilder(() {});
-      
-      service.registerFeature('feature1', binding1);
-      service.registerFeature('feature2', binding2);
-      
-      expect(service.getRegisteredFeatures().length, 2);
-      expect(service.getRegisteredFeatures(), contains('feature1'));
-      expect(service.getRegisteredFeatures(), contains('feature2'));
-    });
+      final cleared = await controller.clearAll();
 
-    test('createFeatureBindings should initialize all registered features', () {
-      // Register features with bindings
-      final binding1 = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService());
-      });
-      final binding2 = BindingsBuilder(() {
-        Get.put<String>('home-service');
-      });
-      
-      service.registerFeature('todos', binding1);
-      service.registerFeature('home', binding2);
-      
-      // Create bindings
-      service.createFeatureBindings();
-      
-      // Verify bindings were created
-      expect(Get.isRegistered<TodosService>(), true);
-      expect(Get.isRegistered<String>(), true);
-    });
-
-    test('deleteFeatureBindings should remove all feature bindings', () {
-      // Register and create features
-      final binding = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService());
-      });
-      
-      service.registerFeature('todos', binding);
-      service.createFeatureBindings();
-      
-      expect(Get.isRegistered<TodosService>(), true);
-      
-      // Delete bindings
-      service.deleteFeatureBindings();
-      
-      // Verify bindings were deleted
-      expect(Get.isRegistered<TodosService>(), false);
-    });
-
-    test('feature registry should not re-initialize bindings on multiple calls', () {
-      int initCount = 0;
-      
-      // Create a custom binding that tracks initialization
-      final binding = BindingsBuilder(() {
-        // Bindings called via feature registry should only execute once
-        if (!Get.isRegistered<String>()) {
-          Get.put<String>('test-service');
-          initCount++;
-        }
-      });
-      
-      service.registerFeature('test', binding);
-      
-      // First call - should initialize
-      service.createFeatureBindings();
-      expect(initCount, 1);
-      expect(Get.isRegistered<String>(), true);
-      
-      // Second call - binding executes again but service already registered
-      service.createFeatureBindings();
-      expect(initCount, 1, reason: 'Service should only be initialized once even if binding called multiple times');
-    });
-  });
-
-  group('AuthController Tests', () {
-    late AuthController controller;
-    late AuthService authService;
-    late FeatureRegistryService featureRegistry;
-
-    setUp(() {
-      Get.testMode = true;
-      featureRegistry = FeatureRegistryService();
-      Get.put<FeatureRegistryService>(featureRegistry, permanent: true);
-      authService = AuthService();
-      controller = AuthController(authService: authService);
-    });
-
-    tearDown(() {
-      controller.onClose();
-      Get.reset();
-    });
-
-    test('should inject AuthService via constructor', () {
-      expect(controller, isNotNull);
-    });
-
-    test('login should validate inputs and authenticate', () async {
-      controller.emailController.value = 'test@example.com';
-      controller.passwordController.value = 'password';
-      
-      // Note: Navigation and snackbars won't work in test mode without MaterialApp
-      // But authentication should still succeed
-      await controller.login();
-      
-      expect(authService.isAuthenticated, true);
-    });
-
-    test('login should show error for empty credentials', () async {
-      controller.emailController.value = '';
-      controller.passwordController.value = '';
-      
-      await controller.login();
-      
-      expect(authService.isAuthenticated, false);
-    });
-
-    test('logout should clear authentication', () async {
-      // Login first
-      controller.emailController.value = 'test@example.com';
-      controller.passwordController.value = 'password';
-      await controller.login();
-      
-      expect(authService.isAuthenticated, true);
-      
-      // Logout
-      await controller.logout();
-      
-      expect(authService.isAuthenticated, false);
-    });
-  });
-
-  group('HomeController Tests', () {
-    late HomeController controller;
-    late AuthService authService;
-    late FeatureRegistryService featureRegistry;
-
-    setUp(() {
-      Get.testMode = true;
-      featureRegistry = FeatureRegistryService();
-      Get.put<FeatureRegistryService>(featureRegistry, permanent: true);
-      authService = AuthService();
-      // Login to create a user
-      authService.login('test@example.com', 'password');
-      controller = HomeController(authService: authService);
-    });
-
-    tearDown(() {
-      controller.onClose();
-      Get.reset();
-    });
-
-    test('should inject AuthService via constructor', () {
-      expect(controller, isNotNull);
-    });
-
-    test('getUserEmail should return current user email', () {
-      final email = controller.getUserEmail();
-      expect(email, 'test@example.com');
-    });
-
-    test('incrementCounter should increase counter value', () {
-      expect(controller.counter.value, 0);
-      
-      controller.incrementCounter();
-      expect(controller.counter.value, 1);
-      
-      controller.incrementCounter();
-      expect(controller.counter.value, 2);
-    });
-
-    test('logout should clear authentication', () async {
-      expect(authService.isAuthenticated, true);
-      
-      await controller.logout();
-      
-      expect(authService.isAuthenticated, false);
-    });
-  });
-
-  group('Memory Management Tests', () {
-    late FeatureRegistryService featureRegistry;
-    late AuthService authService;
-
-    setUp(() {
-      Get.testMode = true;
-      featureRegistry = FeatureRegistryService();
-      Get.put<FeatureRegistryService>(featureRegistry, permanent: true);
-      authService = AuthService();
-      Get.put<AuthService>(authService, permanent: true);
-    });
-
-    tearDown(() {
-      Get.reset();
-    });
-
-    test('feature controllers should be cleaned up on logout', () async {
-      // Register features
-      final homeBinding = BindingsBuilder(() {
-        Get.put<HomeController>(HomeController(authService: authService));
-      });
-      final todosBinding = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService());
-      });
-      
-      featureRegistry.registerFeature('home', homeBinding);
-      featureRegistry.registerFeature('todos', todosBinding);
-      
-      // Login to create feature bindings
-      await authService.login('test@example.com', 'password');
-      
-      expect(Get.isRegistered<HomeController>(), true);
-      expect(Get.isRegistered<TodosService>(), true);
-      
-      // Logout to delete feature bindings
-      await authService.logout();
-      
-      // Verify cleanup
-      expect(Get.isRegistered<HomeController>(), false);
-      expect(Get.isRegistered<TodosService>(), false);
-      expect(authService.isAuthenticated, false);
-    });
-
-    test('multiple login/logout cycles should properly manage memory', () async {
-      final binding = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService());
-      });
-      featureRegistry.registerFeature('todos', binding);
-      
-      // First cycle
-      await authService.login('user1@example.com', 'password');
-      expect(authService.isAuthenticated, true);
-      expect(Get.isRegistered<TodosService>(), true);
-      
-      await authService.logout();
-      expect(authService.isAuthenticated, false);
-      expect(Get.isRegistered<TodosService>(), false);
-      
-      // Second cycle
-      await authService.login('user2@example.com', 'password');
-      expect(authService.isAuthenticated, true);
-      expect(authService.currentUser?.email, 'user2@example.com');
-      expect(Get.isRegistered<TodosService>(), true);
-      
-      await authService.logout();
-      expect(authService.isAuthenticated, false);
-      expect(Get.isRegistered<TodosService>(), false);
-    });
-
-    test('TodosService onClose should clear data', () {
-      final todosService = TodosService();
-      todosService.onInit();
-      
-      // Create some todos
-      todosService.createTodo('Test Todo', 'Description');
-      expect(todosService.todoCount, greaterThan(0));
-      
-      // Call onClose to clean up
-      todosService.onClose();
-      
-      // Data should be cleared
-      expect(todosService.todoCount, 0);
-    });
-
-    test('controllers should handle disposal gracefully with active timers', () async {
-      // Register features with controllers that have timers
-      final homeBinding = BindingsBuilder(() {
-        Get.put<HomeController>(HomeController(authService: authService));
-      });
-      final todosBinding = BindingsBuilder(() {
-        Get.put<TodosService>(TodosService());
-        Get.put<TodosController>(TodosController());
-      });
-      
-      featureRegistry.registerFeature('home', homeBinding);
-      featureRegistry.registerFeature('todos', todosBinding);
-      
-      // Login to create feature bindings (starts timers)
-      await authService.login('test@example.com', 'password');
-      
-      expect(Get.isRegistered<HomeController>(), true);
-      expect(Get.isRegistered<TodosController>(), true);
-      
-      // Wait briefly to ensure timers are running
-      await Future.delayed(const Duration(milliseconds: 100));
-      
-      // Logout immediately (should cancel timers without errors)
-      await authService.logout();
-      
-      // Wait a bit to ensure no timer callbacks execute after disposal
-      await Future.delayed(const Duration(milliseconds: 100));
-      
-      // Verify cleanup - controllers should be deleted without errors
-      expect(Get.isRegistered<HomeController>(), false);
-      expect(Get.isRegistered<TodosController>(), false);
-      expect(authService.isAuthenticated, false);
-    });
-
-    test('repeated login/logout cycles should work without registration errors', () async {
-      // Register features with actual binding classes
-      featureRegistry.registerFeature('home', HomeBinding());
-      featureRegistry.registerFeature('todos', TodosBinding());
-      
-      // First login cycle
-      await authService.login('user1@example.com', 'password');
-      expect(authService.isAuthenticated, true);
-      expect(authService.currentUser?.email, 'user1@example.com');
-      
-      // First logout - factories are cleared along with instances
-      await authService.logout();
-      expect(authService.isAuthenticated, false);
-      // Factories should be removed, not just instances
-      expect(Get.isRegistered<HomeController>(), false);
-      expect(Get.isRegistered<TodosController>(), false);
-      
-      // Second login cycle - factories are re-registered without errors
-      await authService.login('user2@example.com', 'password');
-      expect(authService.isAuthenticated, true);
-      expect(authService.currentUser?.email, 'user2@example.com');
-      
-      // Second logout
-      await authService.logout();
-      expect(authService.isAuthenticated, false);
-      expect(Get.isRegistered<HomeController>(), false);
-      expect(Get.isRegistered<TodosController>(), false);
-      
-      // Third login cycle - verify it still works
-      await authService.login('user3@example.com', 'password');
-      expect(authService.isAuthenticated, true);
-      expect(authService.currentUser?.email, 'user3@example.com');
-      
-      // Final logout
-      await authService.logout();
-      expect(authService.isAuthenticated, false);
+      expect(cleared, isTrue);
+      expect(controller.todos, isEmpty);
     });
   });
 }
