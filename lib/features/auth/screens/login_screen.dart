@@ -13,10 +13,10 @@ class LoginScreen extends GetView<AuthController> {
         title: const Text('Login'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
               'Flutter GetX Architecture',
@@ -25,7 +25,7 @@ class LoginScreen extends GetView<AuthController> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 24),
             TextField(
               decoration: const InputDecoration(
                 labelText: 'Email',
@@ -88,8 +88,94 @@ class LoginScreen extends GetView<AuthController> {
                       ? const CircularProgressIndicator()
                       : const Text('Login'),
                 )),
+            const SizedBox(height: 24),
+            const _CredentialsCard(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _CredentialsCard extends StatelessWidget {
+  const _CredentialsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final credentials = const [
+      _CredentialRow(
+        name: 'Alex Operations',
+        email: 'alex.operations@example.com',
+        password: 'Passw0rd!',
+        features: ['SMS', 'Voice'],
+      ),
+      _CredentialRow(
+        name: 'Brenda Dispatch',
+        email: 'brenda.dispatch@example.com',
+        password: 'FaxMeNow',
+        features: ['Fax', 'Todos'],
+      ),
+      _CredentialRow(
+        name: 'Cameron Supervisor',
+        email: 'cameron.supervisor@example.com',
+        password: 'Secure*123',
+        features: ['SMS', 'Fax', 'Voice', 'Todos'],
+      ),
+    ];
+
+    return Card(
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Demo Accounts',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            ...credentials,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CredentialRow extends StatelessWidget {
+  final String name;
+  final String email;
+  final String password;
+  final List<String> features;
+
+  const _CredentialRow({
+    required this.name,
+    required this.email,
+    required this.password,
+    required this.features,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(name, style: theme.textTheme.titleSmall),
+          Text('Email: $email'),
+          Text('Password: $password'),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: features
+                .map((feature) => Chip(label: Text(feature)))
+                .toList(),
+          ),
+        ],
       ),
     );
   }

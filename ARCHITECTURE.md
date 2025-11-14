@@ -97,6 +97,47 @@ responsible for feedback (dialogs/snackbars) and route changes based on controll
 
 ---
 
+## Feature Modules & Route Activation
+
+Each communication feature lives in its own module and remains dormant until the user
+enters the dedicated route:
+
+- **SMS Service** (`lib/features/sms`) exposes conversations and message threads backed by
+  `SmsService`, which caches data from the remote/local data sources only when the
+  `/sms` routes are visited.
+- **Fax Center** (`lib/features/fax`) mirrors the SMS flow for fax documents. Its
+  binding registers `FaxService` and controllers on demand when navigating to `/fax`
+  routes.
+- **Voice Calls** (`lib/features/voice`) provides call history and per-call details using
+  `VoiceService`, activated from the `/voice` routes.
+- **Todos** (`lib/features/todos`) continues to manage task CRUD operations when the
+  `/todos` route is opened.
+
+The home screen presents a bottom navigation layout with a dashboard tab that lists only
+the modules enabled for the signed-in user. Selecting a card navigates to the respective
+route, causing its binding to register the necessary dependencies. Because every binding
+uses `Get.lazyPut` with `fenix: true`, services and controllers are disposed when leaving
+the route and recreated on the next visit—ensuring a clean state after logout/login
+cycles.
+
+---
+
+## Demo Accounts & Feature Access
+
+The fake auth provider ships with three demo identities. Use the credentials below to
+exercise feature toggles:
+
+| Name                | Email                            | Password    | Enabled Modules        |
+| ------------------- | -------------------------------- | ----------- | ---------------------- |
+| Alex Operations     | `alex.operations@example.com`    | `Passw0rd!` | SMS, Voice             |
+| Brenda Dispatch     | `brenda.dispatch@example.com`    | `FaxMeNow`  | Fax, Todos             |
+| Cameron Supervisor  | `cameron.supervisor@example.com` | `Secure*123` | SMS, Fax, Voice, Todos |
+
+Accounts without a module simply do not render its card in the dashboard, preventing
+navigations to unavailable features.
+
+---
+
 ## Adding a New Feature
 
 1. **Domain**: Create entity classes, a repository interface, and use cases inside

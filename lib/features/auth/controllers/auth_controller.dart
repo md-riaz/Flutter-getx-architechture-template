@@ -49,8 +49,11 @@ class AuthController extends BaseController {
     errorMessage.value = null;
 
     try {
+      final sanitizedEmail = email.value.trim().toLowerCase();
+      final sanitizedPassword = password.value.trim();
+
       final result = await _loginUseCase(
-        LoginParams(email: email.value, password: password.value),
+        LoginParams(email: sanitizedEmail, password: sanitizedPassword),
       );
       user.value = result;
       _authService.updateCachedUser(result);

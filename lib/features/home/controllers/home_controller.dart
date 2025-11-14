@@ -18,6 +18,8 @@ class HomeController extends BaseController {
   final user = Rxn<User>();
   final isProcessing = false.obs;
   final errorMessage = RxnString();
+  final selectedTabIndex = 0.obs;
+  final availableFeatures = <AppFeature>[].obs;
 
   HomeController({
     required GetCurrentUserUseCase getCurrentUserUseCase,
@@ -30,7 +32,11 @@ class HomeController extends BaseController {
   @override
   void onInit() {
     super.onInit();
-    user.value = _getCurrentUserUseCase();
+    final current = _getCurrentUserUseCase();
+    user.value = current;
+    if (current != null) {
+      availableFeatures.assignAll(current.enabledFeatures);
+    }
   }
 
   Future<bool> logout() async {
@@ -40,6 +46,7 @@ class HomeController extends BaseController {
       await _logoutUseCase();
       _authService.updateCachedUser(null);
       user.value = null;
+      availableFeatures.clear();
       return true;
     } catch (_) {
       errorMessage.value = 'Unable to logout. Please try again.';
@@ -47,5 +54,9 @@ class HomeController extends BaseController {
     } finally {
       isProcessing.value = false;
     }
+  }
+
+  void selectTab(int index) {
+    selectedTabIndex.value = index;
   }
 }
