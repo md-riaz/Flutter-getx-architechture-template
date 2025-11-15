@@ -7,11 +7,14 @@ import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/responsive_builder.dart';
 import '../../../core/config/navigation_config.dart';
 
-class DashboardView extends GetView<DashboardController> {
+class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Get the session-tagged controller
+    final controller = Get.find<DashboardController>(tag: 'session');
+    
     return AppLayout(
       title: 'Dashboard',
       navigationItems: NavigationConfig.mainNavigationItems,

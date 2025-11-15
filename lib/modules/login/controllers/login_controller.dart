@@ -45,8 +45,11 @@ class LoginController extends GetxController {
     );
 
     if (success) {
-      // Initialize session-level bindings
-      SessionBindings().dependencies();
+      // Initialize session-level bindings with user permissions
+      final user = _authService.currentUser;
+      if (user != null) {
+        SessionBindings(user: user).dependencies();
+      }
       
       // Navigate to dashboard
       Get.offAllNamed(Routes.dashboard);

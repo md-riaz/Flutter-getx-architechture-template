@@ -155,10 +155,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       try {
         // Get the auth service and logout
         final authService = Get.find<AuthService>();
-        await authService.logout();
-        
-        // Navigate to login screen
-        Get.offAllNamed('/login');
+        authService.logout(); // Now synchronous - handles navigation internally
       } catch (e) {
         // Fallback if service not found
         Get.offAllNamed('/login');

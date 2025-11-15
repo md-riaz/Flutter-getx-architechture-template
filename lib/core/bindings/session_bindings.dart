@@ -1,32 +1,32 @@
 import 'package:get/get.dart';
 import '../../modules/inventory/bindings/inventory_bindings.dart';
-import '../services/auth_service.dart';
-import '../services/session_manager.dart';
+import '../../modules/dashboard/controllers/dashboard_controller.dart';
+import '../data/models/user_model.dart';
 
 /// Session-level bindings
 /// These are initialized after login and disposed on logout
+/// This is NOT a service - it's a Bindings class that receives user permissions
 class SessionBindings extends Bindings {
+  final User user;
+
+  SessionBindings({required this.user});
+
   @override
   void dependencies() {
-    final sessionManager = Get.find<SessionManager>();
-    final sessionTag = sessionManager.currentSessionTag;
-    final auth = Get.find<AuthService>();
-    final permissions = auth.permissions;
+    print("SessionBindings: Initializing features based on user permissions.");
 
-    // Register session-level dependencies based on user permissions
-    if (permissions?.inventoryAccess ?? false) {
-      _registerInventoryModule(sessionTag);
+    // Initialize feature services first based on user permissions
+    if (user.permissions.inventoryAccess) {
+      InventoryBindings().dependencies();
     }
 
-    // Add more modules here based on permissions
-    // if (permissions?.paymentsAccess ?? false) {
-    //   _registerPaymentsModule(sessionTag);
+    // Add more feature bindings here based on permissions
+    // if (user.permissions.paymentsAccess) {
+    //   PaymentsBindings().dependencies();
     // }
-  }
 
-  void _registerInventoryModule(String sessionTag) {
-    // Use InventoryBindings but ensure dependencies use the session tag
-    final inventoryBindings = InventoryBindings();
-    inventoryBindings.dependencies();
+    // Finally, initialize the dashboard controller which will use these services.
+    // It's tagged with 'session' so it's disposed on logout.
+    Get.put(DashboardController(), tag: 'session');
   }
 }

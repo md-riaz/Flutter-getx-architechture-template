@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/bindings/session_bindings.dart';
 import '../controllers/dashboard_controller.dart';
 
@@ -6,14 +7,21 @@ import '../controllers/dashboard_controller.dart';
 class DashboardBindings extends Bindings {
   @override
   void dependencies() {
-    // Initialize session-level bindings if not already done
-    // This ensures session dependencies are available when navigating directly to dashboard
-    final sessionBindingsExist = Get.isRegistered<DashboardController>(tag: 'session');
-    if (!sessionBindingsExist) {
-      SessionBindings().dependencies();
+    // Check if session bindings already exist
+    final sessionControllerExists = Get.isRegistered<DashboardController>(tag: 'session');
+    
+    if (!sessionControllerExists) {
+      // Session bindings not initialized, initialize them now
+      // This handles the case where user navigates directly to dashboard
+      final authService = Get.find<AuthService>();
+      final user = authService.currentUser;
+      
+      if (user != null) {
+        SessionBindings(user: user).dependencies();
+      }
     }
     
-    // Register the dashboard controller (route-level)
-    Get.lazyPut<DashboardController>(() => DashboardController());
+    // Note: We don't register DashboardController here as it's already 
+    // registered with 'session' tag in SessionBindings
   }
 }

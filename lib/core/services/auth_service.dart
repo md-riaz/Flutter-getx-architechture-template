@@ -1,7 +1,9 @@
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/auth_repository.dart';
 import './session_manager.dart';
+import '../routes/app_routes.dart';
 
 class AuthService extends GetxService {
   final AuthRepository _authRepository;
@@ -24,9 +26,6 @@ class AuthService extends GetxService {
       final user = await _authRepository.login(email, password);
       _currentUser.value = user;
       
-      // Initialize session-level bindings after successful login
-      _sessionManager.initializeSession();
-      
       return true;
     } catch (e) {
       print('Login error: $e');
@@ -37,24 +36,30 @@ class AuthService extends GetxService {
   }
 
   /// Logout and cleanup session
-  Future<void> logout() async {
-    try {
-      _isLoading.value = true;
-      
-      if (_currentUser.value?.token != null) {
-        await _authRepository.logout(_currentUser.value!.token);
-      }
-      
-      // Clear session-level bindings
-      _sessionManager.clearSession();
-      
-      // Clear user state
-      _currentUser.value = null;
-    } catch (e) {
-      print('Logout error: $e');
-    } finally {
-      _isLoading.value = false;
+  void logout() {
+    print("AuthService: Logout initiated.");
+
+    // Call the logout API in background (don't await)
+    if (_currentUser.value?.token != null) {
+      _authRepository.logout(_currentUser.value!.token).catchError((e) {
+        print('Logout API error: $e');
+      });
     }
+
+    // Schedule the deletion to happen after the current frame.
+    // This ensures the navigation has started and the old view is being disposed,
+    // preventing it from trying to access a deleted controller.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      print("AuthService: Frame complete. Deleting all session dependencies.");
+      _sessionManager.clearSession();
+    });
+
+    // Clear user state immediately
+    _currentUser.value = null;
+
+    // Navigate away immediately. This is the most important step.
+    // Get.offAllNamed will pop the current view and start the transition.
+    Get.offAllNamed(Routes.login);
   }
 
   /// Validate current session
