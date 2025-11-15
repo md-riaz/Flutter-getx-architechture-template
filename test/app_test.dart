@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:getx_modular_template/core/services/api_client.dart';
 import 'package:getx_modular_template/core/services/auth_service.dart';
+import 'package:getx_modular_template/core/services/session_manager.dart';
+import 'package:getx_modular_template/core/data/repositories/auth_repository.dart';
 import 'package:getx_modular_template/modules/inventory/data/dto/inventory_request.dart';
 import 'package:getx_modular_template/modules/inventory/data/models/inventory_item.dart';
 import 'package:getx_modular_template/modules/inventory/data/repositories/inventory_repository.dart';
@@ -27,17 +29,20 @@ void main() {
       expect(data.first['name'], 'Laptop');
     });
 
-    test('AuthService manages login state', () async {
-      final authService = AuthService();
+    test('AuthService manages login state with new architecture', () async {
+      final apiClient = ApiClient();
+      final authRepository = AuthRepository(apiClient);
+      final sessionManager = SessionManager();
+      final authService = AuthService(authRepository, sessionManager);
 
       expect(authService.isLoggedIn, isFalse);
 
-      await authService.fakeLogin();
+      await authService.login('test@example.com', 'password');
 
       expect(authService.isLoggedIn, isTrue);
-      expect(authService.permissions.inventoryAccess, isTrue);
+      expect(authService.permissions?.inventoryAccess, isTrue);
 
-      authService.logout();
+      await authService.logout();
 
       expect(authService.isLoggedIn, isFalse);
     });

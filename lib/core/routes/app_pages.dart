@@ -9,6 +9,7 @@ import '../../modules/inventory/bindings/inventory_bindings.dart';
 import '../../modules/inventory/views/inventory_view.dart';
 import '../../modules/examples/bindings/examples_bindings.dart';
 import '../../modules/examples/views/examples_view.dart';
+import '../middleware/auth_middleware.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -27,16 +28,19 @@ class AppPages {
       name: Routes.dashboard,
       page: () => const DashboardView(),
       binding: DashboardBindings(),
+      middlewares: [AuthMiddleware()],
     ),
     GetPage(
       name: Routes.inventory,
       page: () => const InventoryView(),
       binding: InventoryBindings(),
+      middlewares: [AuthMiddleware()],
     ),
     GetPage(
       name: Routes.examples,
       page: () => const ExamplesView(),
       binding: ExamplesBindings(),
+      middlewares: [AuthMiddleware()],
     ),
   ];
 }
