@@ -4,18 +4,26 @@ A starter template for building **feature-first, modular Flutter apps** using **
 
 ## Features
 
-- Feature-based folder structure (`modules/`)
-- Core layer for bindings, routes, services (`core/`)
-- Repository + DTO + Model pattern
-- Reactive UI with GetX (`Obx`, `GetView`)
-- Example feature: `inventory`
-- Composable dashboard with feature detection
-- **Responsive layout builder** (mobile, tablet, desktop)
-- **Custom AppBar** with search, notifications, and profile menu
-- **Bottom navigation bar** for mobile devices
-- **Drawer navigation** for mobile devices
-- **Navigation rail** for tablet/desktop devices
-- **Comprehensive UI examples** demonstrating all components
+- **Authentication & Authorization**
+  - Splash screen with automatic session validation
+  - Login/Logout functionality with session management
+  - Repository pattern for auth operations
+  - Route protection with middleware
+  - 3-level bindings architecture (Global → Session → Route)
+- **Architecture**
+  - Feature-based folder structure (`modules/`)
+  - Core layer for bindings, routes, services (`core/`)
+  - Repository + DTO + Model pattern
+  - Reactive UI with GetX (`Obx`, `GetView`)
+- **UI & Navigation**
+  - Example feature: `inventory`
+  - Composable dashboard with feature detection
+  - **Responsive layout builder** (mobile, tablet, desktop)
+  - **Custom AppBar** with search, notifications, and profile menu
+  - **Bottom navigation bar** for mobile devices
+  - **Drawer navigation** for mobile devices
+  - **Navigation rail** for tablet/desktop devices
+  - **Comprehensive UI examples** demonstrating all components
 
 ## Getting Started
 
@@ -24,23 +32,53 @@ flutter pub get
 flutter run
 ```
 
-The app will start with a Dashboard that shows an Inventory Summary Card.
-- Tap "View Inventory" to navigate to the Inventory screen
-- Tap "Examples" to see all UI components and responsive design in action
-- Try resizing the window to see responsive layouts adapt
+### First Launch
+
+The app starts with a **Splash Screen** that validates any existing session:
+- If no session exists → **Login Screen**
+- If valid session exists → **Dashboard**
+
+### Demo Login
+
+On the Login screen, enter any email and password to login:
+- **Email:** Any valid email format
+- **Password:** Any password
+
+After login, you'll see:
+- **Dashboard** with personalized greeting
+- **Inventory** feature (based on user permissions)
+- **Examples** page with UI components
+
+### Navigation
+
+- **Mobile:** Bottom navigation bar + Drawer
+- **Tablet/Desktop:** Navigation rail
+- **AppBar:** Search, notifications, and profile menu with logout
+
+### Logout
+
+Click the profile icon → Select "Logout" → Confirm
+
+The app will:
+1. Clear the current user session
+2. Dispose all session-level dependencies
+3. Navigate back to the Login screen
 
 **📖 Documentation:**
+- [AUTH_ARCHITECTURE.md](AUTH_ARCHITECTURE.md) - Authentication & 3-level bindings architecture
 - [FEATURES.md](FEATURES.md) - Complete features overview and quick reference
 - [USAGE_GUIDE.md](USAGE_GUIDE.md) - Detailed usage guide with code examples
 - [RESPONSIVE_DESIGN.md](RESPONSIVE_DESIGN.md) - Responsive design patterns and best practices
 
 ## Structure
 
-- **core/** – global bindings, services, routes, theme
-- **modules/inventory/** – example feature module
+- **core/** – global bindings, services, routes, theme, middleware, auth infrastructure
+- **modules/splash/** – splash screen with session validation
+- **modules/login/** – login screen with authentication
 - **modules/dashboard/** – dynamic composable dashboard
+- **modules/inventory/** – example feature module with repository pattern
 
-You can add new modules by copying the structure of `inventory/` and wiring them into `AppPages` and the `DashboardController`.
+You can add new modules by copying the structure of `inventory/` and wiring them into `AppPages`, `SessionBindings` and the `DashboardController`.
 
 ## Repository Structure
 
@@ -49,24 +87,49 @@ getx_modular_template/
 ├── lib/
 │   ├── core/
 │   │   ├── bindings/
-│   │   │   └── app_bindings.dart
+│   │   │   ├── app_bindings.dart               # Global-level bindings
+│   │   │   └── session_bindings.dart           # Session-level bindings
 │   │   ├── config/
 │   │   │   └── navigation_config.dart          # Centralized navigation
+│   │   ├── data/
+│   │   │   ├── models/
+│   │   │   │   └── user_model.dart             # User & permissions models
+│   │   │   └── repositories/
+│   │   │       └── auth_repository.dart        # Auth API operations
+│   │   ├── middleware/
+│   │   │   └── auth_middleware.dart            # Route protection
 │   │   ├── routes/
 │   │   │   ├── app_pages.dart
 │   │   │   └── app_routes.dart
 │   │   ├── services/
-│   │   │   ├── auth_service.dart
-│   │   │   └── api_client.dart
+│   │   │   ├── api_client.dart
+│   │   │   ├── auth_service.dart               # Auth state management
+│   │   │   └── session_manager.dart            # Session lifecycle
 │   │   ├── theme/
 │   │   │   └── app_theme.dart                  # Light & Dark themes
 │   │   └── widgets/
 │   │       ├── app_layout.dart                 # Responsive layout wrapper
-│   │       ├── custom_app_bar.dart             # Enhanced AppBar
+│   │       ├── custom_app_bar.dart             # Enhanced AppBar with logout
 │   │       ├── responsive_builder.dart         # Responsive builder
 │   │       └── widgets.dart                    # Barrel export
 │   │
 │   ├── modules/
+│   │   ├── splash/                             # Splash screen
+│   │   │   ├── bindings/
+│   │   │   │   └── splash_bindings.dart
+│   │   │   ├── controllers/
+│   │   │   │   └── splash_controller.dart
+│   │   │   └── views/
+│   │   │       └── splash_view.dart
+│   │   │
+│   │   ├── login/                              # Login screen
+│   │   │   ├── bindings/
+│   │   │   │   └── login_bindings.dart
+│   │   │   ├── controllers/
+│   │   │   │   └── login_controller.dart
+│   │   │   └── views/
+│   │   │       └── login_view.dart
+│   │   │
 │   │   ├── dashboard/
 │   │   │   ├── bindings/
 │   │   │   │   └── dashboard_bindings.dart
@@ -94,31 +157,87 @@ getx_modular_template/
 │   │   │       └── widgets/
 │   │   │           └── inventory_summary_card.dart
 │   │   │
-│   │   ├── examples/                           # UI components examples
-│   │   │   ├── bindings/
-│   │   │   │   └── examples_bindings.dart
-│   │   │   ├── controllers/
-│   │   │   │   └── examples_controller.dart
-│   │   │   └── views/
-│   │   │       └── examples_view.dart
-│   │   │
-│   │   └── session/
-│   │       └── session_manager_bindings.dart
+│   │   └── examples/                           # UI components examples
+│   │       ├── bindings/
+│   │       │   └── examples_bindings.dart
+│   │       ├── controllers/
+│   │       │   └── examples_controller.dart
+│   │       └── views/
+│   │           └── examples_view.dart
 │   │
 │   └── main.dart
 │
+├── test/
+│   ├── core/
+│   │   ├── data/repositories/
+│   │   │   └── auth_repository_test.dart
+│   │   └── services/
+│   │       ├── auth_service_test.dart
+│   │       └── session_manager_test.dart
+│   └── app_test.dart
+│
+├── AUTH_ARCHITECTURE.md                        # Auth & bindings architecture
 ├── USAGE_GUIDE.md                              # Comprehensive usage guide
 └── pubspec.yaml
 ```
 
 ## Architecture Patterns
 
+### 3-Level Bindings Architecture
+
+This template implements a sophisticated 3-level dependency injection system:
+
+#### Level 1: Global Bindings
+**Lifecycle:** App startup → App shutdown
+
+```dart
+class AppBindings extends Bindings {
+  void dependencies() {
+    Get.put(ApiClient(), permanent: true);
+    Get.put(SessionManager(), permanent: true);
+    Get.put(AuthRepository(...), permanent: true);
+    Get.put(AuthService(...), permanent: true);
+  }
+}
+```
+
+#### Level 2: Session Bindings
+**Lifecycle:** After login → After logout
+
+```dart
+class SessionBindings extends Bindings {
+  final User user;
+  
+  SessionBindings({required this.user});
+  
+  void dependencies() {
+    if (user.permissions.inventoryAccess) {
+      InventoryBindings().dependencies();
+    }
+    Get.put(DashboardController(), tag: 'session');
+  }
+}
+```
+
+#### Level 3: Route Bindings
+**Lifecycle:** Route enter → Route exit
+
+```dart
+class LoginBindings extends Bindings {
+  void dependencies() {
+    Get.lazyPut<LoginController>(() => LoginController());
+  }
+}
+```
+
 ### Core Layer
 The `core/` directory contains application-wide configurations and services:
 
-- **bindings/** - Global dependency injection setup
+- **bindings/** - Global and session-level dependency injection
+- **data/** - Core data models and repositories (User, AuthRepository)
+- **middleware/** - Route guards and middleware (AuthMiddleware)
 - **routes/** - Navigation configuration with GetX
-- **services/** - Shared services (API client, authentication)
+- **services/** - Shared services (API client, authentication, session management)
 - **theme/** - Application theme configuration
 
 ### Modules
@@ -130,14 +249,20 @@ Each module is self-contained with all necessary layers:
 - **services/** - Module-specific services
 - **views/** - UI screens and widgets
 
-### Dependency Injection
-Uses GetX dependency injection with tags for session management:
+### Session Management
+Session-level dependencies are tagged and cleaned up on logout:
 
 ```dart
+// Register with session tag
 Get.lazyPut<InventoryRepository>(
   () => InventoryRepository(Get.find<ApiClient>()),
-  tag: sessionTag,
+  tag: 'session',
 );
+
+// Cleanup on logout (post-frame callback)
+WidgetsBinding.instance.addPostFrameCallback((_) {
+  Get.deleteAll(tag: 'session', force: true);
+});
 ```
 
 ### Reactive State Management
@@ -151,6 +276,13 @@ Obx(() {
   // ... rest of the UI
 })
 ```
+
+### Authentication Flow
+```
+Splash → Validate Session → Login (if needed) → Initialize Session → Dashboard
+```
+
+For complete details, see [AUTH_ARCHITECTURE.md](AUTH_ARCHITECTURE.md).
 
 ## Adding New Modules
 

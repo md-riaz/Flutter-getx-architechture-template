@@ -7,11 +7,14 @@ import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/responsive_builder.dart';
 import '../../../core/config/navigation_config.dart';
 
-class DashboardView extends GetView<DashboardController> {
+class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Get the session-tagged controller
+    final controller = Get.find<DashboardController>(tag: 'session');
+    
     return AppLayout(
       title: 'Dashboard',
       navigationItems: NavigationConfig.mainNavigationItems,
@@ -56,12 +59,12 @@ class DashboardView extends GetView<DashboardController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Welcome to GetX Modular Template',
+              'Welcome back, ${controller.userName}!',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
             Text(
-              'This template includes responsive layouts, navigation, and modular architecture.',
+              'This template includes responsive layouts, navigation, and modular architecture with proper authentication.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),

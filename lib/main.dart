@@ -20,7 +20,7 @@ class ModularGetXApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system, // Follows system theme
-      initialRoute: Routes.dashboard,
+      initialRoute: Routes.splash,
       getPages: AppPages.pages,
       initialBinding: AppBindings(),
     );
