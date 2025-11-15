@@ -1,33 +1,50 @@
-import 'dart:async';
-import 'dart:math';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import '../../../base/base_controller.dart';
+import '../../../domain/todos/entities/todo.dart';
+import '../../../domain/todos/usecases/clear_todos_use_case.dart';
+import '../../../domain/todos/usecases/create_todo_use_case.dart';
+import '../../../domain/todos/usecases/delete_todo_use_case.dart';
+import '../../../domain/todos/usecases/fetch_todos_use_case.dart';
+import '../../../domain/todos/usecases/toggle_todo_completion_use_case.dart';
+import '../../../domain/todos/usecases/update_todo_use_case.dart';
 import '../services/todos_service.dart';
-import '../../../util/snackbar.dart';
 
-/// Todos controller with random state via Timer
 class TodosController extends BaseController {
   static const tag = 'TodosController';
-  
+
   @override
   String get controllerName => tag;
-  
+
+  final FetchTodosUseCase _fetchTodosUseCase;
+  final CreateTodoUseCase _createTodoUseCase;
+  final UpdateTodoUseCase _updateTodoUseCase;
+  final DeleteTodoUseCase _deleteTodoUseCase;
+  final ToggleTodoCompletionUseCase _toggleTodoCompletionUseCase;
+  final ClearTodosUseCase _clearTodosUseCase;
   final TodosService _todosService;
-  
-  final titleController = RxString('');
-  final descriptionController = RxString('');
-  final randomState = RxInt(0);
-  final isLoading = RxBool(false);
-  
-  Timer? _stateTimer;
-  final _random = Random();
-  bool _isDisposed = false;
 
-  TodosController({TodosService? todosService})
-      : _todosService = todosService ?? Get.find<TodosService>();
+  final title = ''.obs;
+  final description = ''.obs;
+  final isLoading = false.obs;
+  final errorMessage = RxnString();
 
-  List get todos => _todosService.todos;
+  TodosController({
+    required FetchTodosUseCase fetchTodosUseCase,
+    required CreateTodoUseCase createTodoUseCase,
+    required UpdateTodoUseCase updateTodoUseCase,
+    required DeleteTodoUseCase deleteTodoUseCase,
+    required ToggleTodoCompletionUseCase toggleTodoCompletionUseCase,
+    required ClearTodosUseCase clearTodosUseCase,
+    required TodosService todosService,
+  })  : _fetchTodosUseCase = fetchTodosUseCase,
+        _createTodoUseCase = createTodoUseCase,
+        _updateTodoUseCase = updateTodoUseCase,
+        _deleteTodoUseCase = deleteTodoUseCase,
+        _toggleTodoCompletionUseCase = toggleTodoCompletionUseCase,
+        _clearTodosUseCase = clearTodosUseCase,
+        _todosService = todosService;
+
+  RxList<Todo> get todos => _todosService.todos;
   int get todoCount => _todosService.todoCount;
   int get completedCount => _todosService.completedCount;
   int get pendingCount => _todosService.pendingCount;
@@ -35,106 +52,115 @@ class TodosController extends BaseController {
   @override
   void onInit() {
     super.onInit();
-    _startRandomStateTimer();
+    _loadTodos();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-    print('[TodosController] Ready to manage todos');
+  Future<void> _loadTodos() async {
+    try {
+      errorMessage.value = null;
+      final items = await _fetchTodosUseCase();
+      todos.assignAll(items);
+    } catch (_) {
+      errorMessage.value = 'Unable to load todos.';
+    }
   }
 
-  @override
-  void onClose() {
-    _isDisposed = true;
-    _stateTimer?.cancel();
-    _stateTimer = null;
-    super.onClose();
-  }
-
-  /// Start timer to update random state periodically
-  void _startRandomStateTimer() {
-    _stateTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      // Exit early if controller is being disposed or closed
-      if (_isDisposed || isClosed) {
-        timer.cancel();
-        return;
-      }
-      
-      try {
-        randomState.value = _random.nextInt(100);
-        print('[TodosController] Random state updated: ${randomState.value}');
-      } catch (e) {
-        print('[TodosController] Error updating random state: $e');
-        timer.cancel();
-      }
-    });
-  }
-
-  /// Create a new todo
-  Future<void> createTodo() async {
-    if (titleController.value.isEmpty) {
-      AppSnackBar.error('Please enter a title', title: 'Error');
-      return;
+  Future<bool> createTodo() async {
+    if (title.value.isEmpty) {
+      errorMessage.value = 'Please enter a title';
+      return false;
     }
 
     isLoading.value = true;
-    
-    await _todosService.createTodo(
-      titleController.value,
-      descriptionController.value,
-    );
+    errorMessage.value = null;
 
-    isLoading.value = false;
-    titleController.value = '';
-    descriptionController.value = '';
-    
-    if (Get.isDialogOpen == true) {
-      Get.back(); // Close dialog
-    }
-    AppSnackBar.success('Todo created successfully', title: 'Success');
-  }
-
-  /// Toggle todo completion
-  Future<void> toggleTodo(String id) async {
-    await _todosService.toggleTodoComplete(id);
-  }
-
-  /// Delete a todo
-  Future<void> deleteTodo(String id) async {
-    final success = await _todosService.deleteTodo(id);
-    if (success) {
-      AppSnackBar.success('Todo deleted successfully', title: 'Success');
-    }
-  }
-
-  /// Clear all todos
-  void clearAll() {
-    if (Get.overlayContext == null) {
-      print('[TodosController] Cannot show dialog - no overlay context');
-      return;
-    }
-    
-    // Use postFrameCallback to ensure safe dialog display
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (Get.overlayContext == null || _isDisposed || isClosed) {
-        print('[TodosController] Cannot show dialog - context not available');
-        return;
-      }
-      
-      Get.defaultDialog(
-        title: 'Clear All',
-        middleText: 'Are you sure you want to delete all todos?',
-        textConfirm: 'Yes',
-        textCancel: 'No',
-        onConfirm: () {
-          _todosService.clearAllTodos();
-          if (Get.isDialogOpen == true) {
-            Get.back();
-          }
-          AppSnackBar.success('All todos cleared', title: 'Success');
-        },
+    try {
+      final todo = await _createTodoUseCase(
+        CreateTodoParams(title: title.value, description: description.value),
       );
-    });
+      todos.add(todo);
+      title.value = '';
+      description.value = '';
+      return true;
+    } catch (_) {
+      errorMessage.value = 'Unable to create todo. Please try again.';
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<bool> toggleTodo(String id) async {
+    try {
+      errorMessage.value = null;
+      final todo = await _toggleTodoCompletionUseCase(id);
+      if (todo == null) {
+        return false;
+      }
+      final index = todos.indexWhere((item) => item.id == todo.id);
+      if (index != -1) {
+        todos[index] = todo;
+      }
+      return true;
+    } catch (_) {
+      errorMessage.value = 'Unable to update todo.';
+      return false;
+    }
+  }
+
+  Future<bool> deleteTodo(String id) async {
+    try {
+      errorMessage.value = null;
+      final deleted = await _deleteTodoUseCase(id);
+      if (deleted) {
+        todos.removeWhere((todo) => todo.id == id);
+      }
+      return deleted;
+    } catch (_) {
+      errorMessage.value = 'Unable to delete todo.';
+      return false;
+    }
+  }
+
+  Future<bool> updateTodo(
+    String id, {
+    String? title,
+    String? description,
+    bool? isCompleted,
+  }) async {
+    try {
+      errorMessage.value = null;
+      final todo = await _updateTodoUseCase(
+        UpdateTodoParams(
+          id: id,
+          title: title,
+          description: description,
+          isCompleted: isCompleted,
+        ),
+      );
+      if (todo == null) {
+        return false;
+      }
+      final index = todos.indexWhere((item) => item.id == todo.id);
+      if (index != -1) {
+        todos[index] = todo;
+      }
+      return true;
+    } catch (_) {
+      errorMessage.value = 'Unable to update todo.';
+      return false;
+    }
+  }
+
+  Future<bool> clearAll() async {
+    try {
+      errorMessage.value = null;
+      await _clearTodosUseCase();
+      todos.clear();
+      return true;
+    } catch (_) {
+      errorMessage.value = 'Unable to clear todos.';
+      return false;
+    }
   }
 }

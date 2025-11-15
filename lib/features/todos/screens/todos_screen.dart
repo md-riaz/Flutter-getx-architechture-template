@@ -14,7 +14,7 @@ class TodosScreen extends GetView<TodosController> {
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_sweep),
-            onPressed: controller.clearAll,
+            onPressed: () => _confirmClearAll(context),
             tooltip: 'Clear All',
           ),
         ],
@@ -44,7 +44,17 @@ class TodosScreen extends GetView<TodosController> {
                     child: ListTile(
                       leading: Checkbox(
                         value: todo.isCompleted,
-                        onChanged: (_) => controller.toggleTodo(todo.id),
+                        onChanged: (_) async {
+                          final success = await controller.toggleTodo(todo.id);
+                          if (!success && !Get.testMode) {
+                            Get.snackbar(
+                              'Todos',
+                              controller.errorMessage.value ??
+                                  'Unable to update todo.',
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
+                          }
+                        },
                       ),
                       title: Text(
                         todo.title,
@@ -59,7 +69,25 @@ class TodosScreen extends GetView<TodosController> {
                           : null,
                       trailing: IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => controller.deleteTodo(todo.id),
+                        onPressed: () async {
+                          final deleted = await controller.deleteTodo(todo.id);
+                          if (deleted) {
+                            if (!Get.testMode) {
+                              Get.snackbar(
+                                'Todos',
+                                'Todo deleted successfully',
+                                snackPosition: SnackPosition.BOTTOM,
+                              );
+                            }
+                          } else if (!Get.testMode) {
+                            Get.snackbar(
+                              'Todos',
+                              controller.errorMessage.value ??
+                                  'Unable to delete todo.',
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
+                          }
+                        },
                       ),
                     ),
                   );
@@ -67,17 +95,23 @@ class TodosScreen extends GetView<TodosController> {
               );
             }),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Obx(() => Text(
-              'Random State: ${controller.randomState.value}',
-              style: const TextStyle(color: Colors.grey),
-            )),
-          ),
+          Obx(() {
+            final message = controller.errorMessage.value;
+            if (message == null) {
+              return const SizedBox.shrink();
+            }
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                message,
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddTodoDialog,
+        onPressed: () => _showAddTodoDialog(context),
         child: const Icon(Icons.add),
       ),
     );
@@ -85,17 +119,20 @@ class TodosScreen extends GetView<TodosController> {
 
   Widget _buildStats() {
     return Obx(() => Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.blue.shade50,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItem('Total', controller.todoCount.toString(), Colors.blue),
-          _buildStatItem('Pending', controller.pendingCount.toString(), Colors.orange),
-          _buildStatItem('Completed', controller.completedCount.toString(), Colors.green),
-        ],
-      ),
-    ));
+          padding: const EdgeInsets.all(16),
+          color: Colors.blue.shade50,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatItem('Total', controller.todoCount.toString(),
+                  Colors.blue),
+              _buildStatItem('Pending', controller.pendingCount.toString(),
+                  Colors.orange),
+              _buildStatItem('Completed',
+                  controller.completedCount.toString(), Colors.green),
+            ],
+          ),
+        ));
   }
 
   Widget _buildStatItem(String label, String value, Color color) {
@@ -117,69 +154,117 @@ class TodosScreen extends GetView<TodosController> {
     );
   }
 
-  void _showAddTodoDialog() {
-    // Check if overlay context is available before showing dialog
-    if (Get.overlayContext == null) {
-      print('[TodosScreen] Cannot show dialog - no overlay context available');
-      return;
-    }
-    
-    // Use postFrameCallback to ensure dialog shows after current frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (Get.overlayContext == null) {
-        print('[TodosScreen] Dialog canceled - overlay context lost');
-        return;
-      }
-      
-      Get.dialog(
+  Future<void> _showAddTodoDialog(BuildContext context) async {
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+
+    await Get.dialog(
       AlertDialog(
         title: const Text('Add New Todo'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
+              controller: titleController,
               decoration: const InputDecoration(
                 labelText: 'Title',
                 border: OutlineInputBorder(),
               ),
-              onChanged: (value) => controller.titleController.value = value,
               autofocus: true,
+              onChanged: (value) => controller.title.value = value,
             ),
             const SizedBox(height: 16),
             TextField(
+              controller: descriptionController,
               decoration: const InputDecoration(
                 labelText: 'Description (optional)',
                 border: OutlineInputBorder(),
               ),
-              onChanged: (value) => controller.descriptionController.value = value,
               maxLines: 3,
+              onChanged: (value) => controller.description.value = value,
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () {
-              controller.titleController.value = '';
-              controller.descriptionController.value = '';
-              if (Get.isDialogOpen == true) {
-                Get.back();
-              }
+              controller.title.value = '';
+              controller.description.value = '';
+              Get.back();
             },
             child: const Text('Cancel'),
           ),
           Obx(() => ElevatedButton(
-            onPressed: controller.isLoading.value ? null : controller.createTodo,
-            child: controller.isLoading.value
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Add'),
-          )),
+                onPressed: controller.isLoading.value
+                    ? null
+                    : () async {
+                        final created = await controller.createTodo();
+                        if (created) {
+                          if (!Get.testMode) {
+                            Get.snackbar(
+                              'Todos',
+                              'Todo created successfully',
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
+                          }
+                          Get.back();
+                        } else if (!Get.testMode) {
+                          Get.snackbar(
+                            'Todos',
+                            controller.errorMessage.value ??
+                                'Unable to create todo.',
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                        }
+                      },
+                child: controller.isLoading.value
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Add'),
+              )),
         ],
       ),
-      );
-    });
+    );
+  }
+
+  Future<void> _confirmClearAll(BuildContext context) async {
+    final result = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Clear All'),
+        content: const Text('Are you sure you want to delete all todos?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            child: const Text('Yes'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      final cleared = await controller.clearAll();
+      if (cleared) {
+        if (!Get.testMode) {
+          Get.snackbar(
+            'Todos',
+            'All todos cleared',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
+      } else if (!Get.testMode) {
+        Get.snackbar(
+          'Todos',
+          controller.errorMessage.value ?? 'Unable to clear todos.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    }
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'binding/initial_bindings.dart';
 import 'theme/app_theme.dart';
+import 'theme/theme_binding.dart';
 import 'util/app_routes.dart';
 
 void main() {
@@ -18,17 +18,11 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      initialBinding: InitialBindings(),
+      initialBinding: ThemeBinding(),
       initialRoute: AppRoutes.login,
       getPages: AppRoutes.routes,
       debugShowCheckedModeBanner: false,
-      // Ensure navigator key is set for proper overlay management
       navigatorKey: Get.key,
-      onInit: () {
-        print('[MyApp] App initialized');
-        // Initialize feature registry after initial bindings
-        AppRoutes.initializeFeatureRegistry();
-      },
     );
   }
 }
