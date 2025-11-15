@@ -30,7 +30,8 @@ The app will start with a Dashboard that shows an Inventory Summary Card.
 - Try resizing the window to see responsive layouts adapt
 
 **📖 Documentation:**
-- [USAGE_GUIDE.md](USAGE_GUIDE.md) - Complete usage guide with code examples
+- [FEATURES.md](FEATURES.md) - Complete features overview and quick reference
+- [USAGE_GUIDE.md](USAGE_GUIDE.md) - Detailed usage guide with code examples
 - [RESPONSIVE_DESIGN.md](RESPONSIVE_DESIGN.md) - Responsive design patterns and best practices
 
 ## Structure
