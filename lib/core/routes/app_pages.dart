@@ -3,6 +3,8 @@ import '../../modules/dashboard/bindings/dashboard_bindings.dart';
 import '../../modules/dashboard/views/dashboard_view.dart';
 import '../../modules/inventory/bindings/inventory_bindings.dart';
 import '../../modules/inventory/views/inventory_view.dart';
+import '../../modules/examples/bindings/examples_bindings.dart';
+import '../../modules/examples/views/examples_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -16,6 +18,11 @@ class AppPages {
       name: Routes.inventory,
       page: () => const InventoryView(),
       binding: InventoryBindings(),
+    ),
+    GetPage(
+      name: Routes.examples,
+      page: () => const ExamplesView(),
+      binding: ExamplesBindings(),
     ),
   ];
 }

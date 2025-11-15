@@ -18,6 +18,8 @@ class ModularGetXApp extends StatelessWidget {
       title: 'GetX Modular Template',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system, // Follows system theme
       initialRoute: Routes.dashboard,
       getPages: AppPages.pages,
       initialBinding: AppBindings(),
