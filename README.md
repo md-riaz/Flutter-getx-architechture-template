@@ -69,6 +69,7 @@ The app will:
 - [FEATURES.md](FEATURES.md) - Complete features overview and quick reference
 - [USAGE_GUIDE.md](USAGE_GUIDE.md) - Detailed usage guide with code examples
 - [RESPONSIVE_DESIGN.md](RESPONSIVE_DESIGN.md) - Responsive design patterns and best practices
+- [THEME_CONFIGURATION.md](THEME_CONFIGURATION.md) - Theme customization and branding guide
 
 ## Structure
 
@@ -106,7 +107,10 @@ getx_modular_template/
 │   │   │   ├── auth_service.dart               # Auth state management
 │   │   │   └── session_manager.dart            # Session lifecycle
 │   │   ├── theme/
-│   │   │   └── app_theme.dart                  # Light & Dark themes
+│   │   │   ├── app_colors.dart                 # Centralized color definitions
+│   │   │   ├── app_theme.dart                  # Light & Dark themes
+│   │   │   ├── app_theme_config.dart           # Theme configuration
+│   │   │   └── theme.dart                      # Barrel export
 │   │   └── widgets/
 │   │       ├── app_layout.dart                 # Responsive layout wrapper
 │   │       ├── custom_app_bar.dart             # Enhanced AppBar with logout
@@ -238,7 +242,7 @@ The `core/` directory contains application-wide configurations and services:
 - **middleware/** - Route guards and middleware (AuthMiddleware)
 - **routes/** - Navigation configuration with GetX
 - **services/** - Shared services (API client, authentication, session management)
-- **theme/** - Application theme configuration
+- **theme/** - Application theme configuration with customizable colors, typography, and styling (see [THEME_CONFIGURATION.md](THEME_CONFIGURATION.md))
 
 ### Modules
 Each module is self-contained with all necessary layers:
