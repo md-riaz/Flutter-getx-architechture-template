@@ -1,28 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'theme/app_theme.dart';
-import 'theme/theme_binding.dart';
-import 'util/app_routes.dart';
+import 'core/bindings/app_bindings.dart';
+import 'core/routes/app_pages.dart';
+import 'core/routes/app_routes.dart';
+import 'core/theme/app_theme.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ModularGetXApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ModularGetXApp extends StatelessWidget {
+  const ModularGetXApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Flutter GetX Architecture',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      initialBinding: ThemeBinding(),
-      initialRoute: AppRoutes.login,
-      getPages: AppRoutes.routes,
+      title: 'GetX Modular Template',
       debugShowCheckedModeBanner: false,
-      navigatorKey: Get.key,
+      theme: AppTheme.light,
+      initialRoute: Routes.dashboard,
+      getPages: AppPages.pages,
+      initialBinding: AppBindings(),
     );
   }
 }

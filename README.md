@@ -1,198 +1,169 @@
-# Flutter GetX Architecture Demo
+# GetX Modular Template
 
-A Flutter application demonstrating GetX architecture patterns with proper separation of concerns, featuring theme management, authentication, and todo list functionality.
-
-## Architecture
-
-### Structure
-```
-lib/
-├── base/              # Base classes (BaseController)
-├── binding/           # Dependency injection bindings
-├── controller/        # (Reserved for future use)
-├── features/          # Feature modules
-│   ├── auth/         # Authentication feature
-│   │   ├── controllers/
-│   │   ├── models/
-│   │   ├── repositories/
-│   │   ├── screens/
-│   │   └── services/     # Feature-level auth service
-│   ├── home/         # Home feature
-│   │   ├── controllers/
-│   │   └── screens/
-│   └── todos/        # Todos feature (NEW)
-│       ├── controllers/
-│       ├── models/
-│       ├── repositories/
-│       ├── screens/
-│       └── services/     # Feature-level todos service
-├── helper/           # (Reserved for future use)
-├── services/         # App-wide services
-│   ├── feature_registry_service.dart
-│   └── theme_service.dart  # Theme management (NEW)
-├── theme/            # Theme configuration
-└── util/             # Utilities and routes
-```
+A starter template for building **feature-first, modular Flutter apps** using **GetX**.
 
 ## Features
 
-### Controllers
-- All controllers extend `BaseController`
-- Implement `fenix: true` for auto-recovery
-- Include lifecycle debug prints (onInit, onReady, onClose)
-- Random state updates via Timer
-
-### Authentication
-- Local validation (always returns true)
-- User stored in memory
-- AuthRepository handles user management
-- AuthService organized as feature-level service
-
-### Theme Management (NEW)
-- **ThemeService**: Manages light/dark theme state
-- Toggle theme from home screen
-- Persistent theme service via bindings
-- System theme detection on startup
-
-### Services
-- **AuthService**: Manages authentication state (feature-level)
-- **TodosService**: Manages todos CRUD operations (feature-level)
-- **ThemeService**: Manages theme state (app-wide)
-- **FeatureRegistryService**: Manages feature bindings
-  - Creates bindings on login
-  - Deletes bindings on logout
-
-### Features
-- **Auth**: Login screen with email/password
-- **Home**: Welcome screen with counter, user info, and theme toggle
-- **Todos**: Full CRUD todo list with statistics (NEW)
-  - Create, read, update, delete todos
-  - Mark todos as complete/incomplete
-  - View statistics (total, pending, completed)
-  - In-memory storage
-  - Material 3 UI with responsive design
+- Feature-based folder structure (`modules/`)
+- Core layer for bindings, routes, services (`core/`)
+- Repository + DTO + Model pattern
+- Reactive UI with GetX (`Obx`, `GetView`)
+- Example feature: `inventory`
+- Composable dashboard with feature detection
 
 ## Getting Started
 
-### Prerequisites
-- Flutter SDK (3.0.0 or higher)
-- Dart SDK (included with Flutter)
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/md-riaz/Flutter-getx-architechture-test.git
-cd Flutter-getx-architechture-test
-```
-
-2. Install dependencies:
 ```bash
 flutter pub get
-```
-
-3. Run the app:
-```bash
 flutter run
 ```
 
-Or run on specific platform:
-```bash
-flutter run -d chrome      # Web
-flutter run -d android     # Android
-flutter run -d ios         # iOS (macOS only)
+The app will start with a Dashboard that shows an Inventory Summary Card.
+Tap "View Inventory" to navigate to the Inventory screen.
+
+## Structure
+
+- **core/** – global bindings, services, routes, theme
+- **modules/inventory/** – example feature module
+- **modules/dashboard/** – dynamic composable dashboard
+
+You can add new modules by copying the structure of `inventory/` and wiring them into `AppPages` and the `DashboardController`.
+
+## Repository Structure
+
 ```
-
-4. Run tests:
-```bash
-flutter test
+getx_modular_template/
+├── lib/
+│   ├── core/
+│   │   ├── bindings/
+│   │   │   └── app_bindings.dart
+│   │   ├── routes/
+│   │   │   ├── app_pages.dart
+│   │   │   └── app_routes.dart
+│   │   ├── services/
+│   │   │   ├── auth_service.dart
+│   │   │   └── api_client.dart
+│   │   └── theme/
+│   │       └── app_theme.dart
+│   │
+│   ├── modules/
+│   │   ├── dashboard/
+│   │   │   ├── bindings/
+│   │   │   │   └── dashboard_bindings.dart
+│   │   │   ├── controllers/
+│   │   │   │   └── dashboard_controller.dart
+│   │   │   └── views/
+│   │   │       └── dashboard_view.dart
+│   │   │
+│   │   ├── inventory/
+│   │   │   ├── bindings/
+│   │   │   │   └── inventory_bindings.dart
+│   │   │   ├── controllers/
+│   │   │   │   └── inventory_controller.dart
+│   │   │   ├── data/
+│   │   │   │   ├── dto/
+│   │   │   │   │   └── inventory_request.dart
+│   │   │   │   ├── models/
+│   │   │   │   │   └── inventory_item.dart
+│   │   │   │   └── repositories/
+│   │   │   │       └── inventory_repository.dart
+│   │   │   ├── services/
+│   │   │   │   └── inventory_service.dart
+│   │   │   └── views/
+│   │   │       ├── inventory_view.dart
+│   │   │       └── widgets/
+│   │   │           └── inventory_summary_card.dart
+│   │   │
+│   │   └── session/
+│   │       └── session_manager_bindings.dart
+│   │
+│   └── main.dart
+│
+└── pubspec.yaml
 ```
-
-## Deployment
-
-### Web Deployment to GitHub Pages
-
-This project includes a GitHub Actions workflow for deploying the web version to GitHub Pages.
-
-#### Manual Deployment
-
-1. Go to the repository's Actions tab on GitHub
-2. Select "Deploy Flutter Web to GitHub Pages" workflow
-3. Click "Run workflow" button
-4. Select the branch you want to deploy
-5. Click "Run workflow" to start the deployment
-
-The workflow will:
-- Build the Flutter web application with the correct base-href
-- Configure GitHub Pages settings
-- Deploy the built web app to GitHub Pages
-
-Once deployed, the app will be available at: `https://<username>.github.io/Flutter-getx-architechture-test/`
-
-#### Requirements
-
-- GitHub Pages must be enabled for the repository
-- The workflow requires write permissions for the repository (already configured in the workflow file)
-
-## Usage
-
-### Login Flow
-1. Open the app and navigate to the login screen
-2. Enter any email and password (validation always succeeds)
-3. Click "Login" to authenticate
-4. Feature bindings are created automatically
-
-### Home Screen
-1. View user information
-2. Increment counter
-3. Toggle theme (light/dark mode)
-4. Navigate to Todos screen
-5. Logout to clear session
-
-### Todos Screen
-1. Click + button to add new todo
-2. Enter title and description
-3. Check/uncheck to toggle completion
-4. Delete individual todos
-5. View real-time statistics
-6. Clear all todos with confirmation
-
-## Platform Support
-
-This app supports:
-- ✅ Android (API 21+)
-- ✅ iOS (iOS 11+)
-- ✅ Web (Chrome, Firefox, Safari, Edge)
 
 ## Architecture Patterns
 
+### Core Layer
+The `core/` directory contains application-wide configurations and services:
+
+- **bindings/** - Global dependency injection setup
+- **routes/** - Navigation configuration with GetX
+- **services/** - Shared services (API client, authentication)
+- **theme/** - Application theme configuration
+
+### Modules
+Each module is self-contained with all necessary layers:
+
+- **bindings/** - Dependency injection for the module
+- **controllers/** - Business logic and state management
+- **data/** - Data layer with DTOs, models, and repositories
+- **services/** - Module-specific services
+- **views/** - UI screens and widgets
+
 ### Dependency Injection
-All services and controllers use constructor-based dependency injection:
-- **AuthService**: Accepts `AuthRepository` via constructor
-- **AuthController**: Accepts `AuthService` via constructor
-- **HomeController**: Accepts `AuthService` via constructor
-- **TodosService**: Accepts `TodoRepository` via constructor
-- **TodosController**: Accepts `TodosService` via constructor
+Uses GetX dependency injection with tags for session management:
 
-This approach:
-- Makes code more testable by allowing mock dependencies
-- Follows SOLID principles and dependency inversion
-- Maintains backward compatibility with GetX bindings through optional parameters
+```dart
+Get.lazyPut<InventoryRepository>(
+  () => InventoryRepository(Get.find<ApiClient>()),
+  tag: sessionTag,
+);
+```
 
-### Feature-Based Services
-Services are now organized per feature:
-- `features/auth/services/auth_service.dart` - Authentication
-- `features/todos/services/todos_service.dart` - Todo management
+### Reactive State Management
+All UI updates use GetX reactive programming:
 
-### Global Services
-App-wide services remain in `lib/services/`:
-- `feature_registry_service.dart` - Feature lifecycle
-- `theme_service.dart` - Theme management
+```dart
+Obx(() {
+  if (controller.isLoading.value) {
+    return const CircularProgressIndicator();
+  }
+  // ... rest of the UI
+})
+```
+
+## Adding New Modules
+
+1. Create a new module directory under `modules/`
+2. Implement the standard structure (bindings, controllers, data, services, views)
+3. Register routes in `core/routes/app_pages.dart`
+4. Add feature detection in `DashboardController`
+5. Create a summary card widget for the dashboard
+
+Example structure for a new `payments` module:
+
+```
+modules/payments/
+├── bindings/
+│   └── payments_bindings.dart
+├── controllers/
+│   └── payments_controller.dart
+├── data/
+│   ├── dto/
+│   ├── models/
+│   └── repositories/
+├── services/
+│   └── payments_service.dart
+└── views/
+    ├── payments_view.dart
+    └── widgets/
+        └── payments_summary_card.dart
+```
+
+## Platform Support
+
+This template supports:
+- ✅ Android
+- ✅ iOS
+- ✅ Web
+- ✅ Windows
+- ✅ macOS
+- ✅ Linux
 
 ## Notes
 
-- No external APIs - all data is local and in-memory
-- Services are permanent via bindings
-- Feature bindings are dynamically created/deleted based on auth state
-- Theme state persists across navigation
-- All controllers implement GetX lifecycle methods with debug logging
+- No external APIs - uses mock data for demonstration
+- All dependencies are registered with proper lifecycle management
+- Feature modules can be dynamically loaded based on user permissions
+- Clean separation of concerns following SOLID principles
