@@ -99,6 +99,7 @@ class TodoRepositoryImpl implements TodoRepository {
   @override
   Future<void> clearTodos() async {
     try {
+      await _remoteDataSource.clearAll();
       await _localDataSource.clear();
       await _localDataSource.seed([]);
     } catch (error) {

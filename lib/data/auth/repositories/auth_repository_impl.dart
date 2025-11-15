@@ -18,7 +18,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<bool> validateCredentials(String email, String password) async {
     try {
-      return _remoteDataSource.validateCredentials(email, password);
+      return await _remoteDataSource.validateCredentials(email, password);
     } catch (error) {
       throw DataException('Failed to validate credentials', error);
     }

@@ -1,4 +1,5 @@
 import '../../../domain/voice/entities/call_record.dart';
+import '../../core/data_exception.dart';
 
 class CallRecordDto {
   final String id;
@@ -20,14 +21,23 @@ class CallRecordDto {
   });
 
   CallRecord toDomain() {
+    late CallDirection dir;
+    late CallStatus stat;
+    try {
+      dir = CallDirection.values.byName(direction);
+      stat = CallStatus.values.byName(status);
+    } catch (e) {
+      throw DataException('Invalid call record data: direction=$direction, status=$status', e);
+    }
+
     return CallRecord(
       id: id,
       contactName: contactName,
       contactHandle: contactHandle,
       startedAt: startedAt,
       duration: duration,
-      direction: CallDirection.values.byName(direction),
-      status: CallStatus.values.byName(status),
+      direction: dir,
+      status: stat,
     );
   }
 }

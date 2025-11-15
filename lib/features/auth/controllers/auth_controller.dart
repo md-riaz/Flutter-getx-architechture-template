@@ -57,6 +57,7 @@ class AuthController extends BaseController {
       );
       user.value = result;
       _authService.updateCachedUser(result);
+      _clearCredentials();
       return true;
     } on LoginValidationException catch (error) {
       errorMessage.value = error.message;
@@ -74,10 +75,17 @@ class AuthController extends BaseController {
       await _logoutUseCase();
       _authService.updateCachedUser(null);
       user.value = null;
+      _clearCredentials();
       return true;
-    } catch (_) {
+    } catch (error) {
+      logError(error);
       errorMessage.value = 'Logout failed. Please try again.';
       return false;
     }
+  }
+
+  void _clearCredentials() {
+    email.value = '';
+    password.value = '';
   }
 }

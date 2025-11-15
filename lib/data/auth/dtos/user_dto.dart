@@ -24,20 +24,28 @@ class UserDto {
   }
 
   User toDomain() {
+    final invalidFeatures = <String>[];
+    final enabledFeaturesSet = enabledFeatures
+        .map((raw) {
+          try {
+            return AppFeature.values.byName(raw);
+          } catch (_) {
+            invalidFeatures.add(raw);
+            return null;
+          }
+        })
+        .whereType<AppFeature>()
+        .toSet();
+    
+    if (invalidFeatures.isNotEmpty) {
+      print('Warning: Dropped invalid features for user $id: $invalidFeatures');
+    }
+    
     return User(
       id: id,
       name: name,
       email: email,
-      enabledFeatures: enabledFeatures
-          .map((raw) {
-            try {
-              return AppFeature.values.byName(raw);
-            } catch (_) {
-              return null;
-            }
-          })
-          .whereType<AppFeature>()
-          .toSet(),
+      enabledFeatures: enabledFeaturesSet,
     );
   }
 

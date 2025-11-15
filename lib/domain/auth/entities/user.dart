@@ -19,4 +19,18 @@ class User {
   });
 
   bool canAccess(AppFeature feature) => enabledFeatures.contains(feature);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is User &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          email == other.email &&
+          enabledFeatures.length == other.enabledFeatures.length &&
+          enabledFeatures.containsAll(other.enabledFeatures);
+
+  @override
+  int get hashCode => Object.hash(id, name, email, enabledFeatures);
 }

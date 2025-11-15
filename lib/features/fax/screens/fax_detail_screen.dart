@@ -19,7 +19,13 @@ class _FaxDetailScreenState extends State<FaxDetailScreen> {
   void initState() {
     super.initState();
     _controller = Get.find<FaxDetailController>();
-    _conversation = Get.arguments as FaxConversation;
+    final args = Get.arguments;
+    if (args is! FaxConversation) {
+      // Handle invalid arguments gracefully
+      Get.back();
+      return;
+    }
+    _conversation = args;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _controller.ensureLoaded(_conversation.id);
     });

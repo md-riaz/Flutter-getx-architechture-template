@@ -19,7 +19,12 @@ class _SmsThreadScreenState extends State<SmsThreadScreen> {
   void initState() {
     super.initState();
     _controller = Get.find<SmsThreadController>();
-    _conversation = Get.arguments as SmsConversation;
+    final args = Get.arguments;
+    if (args is! SmsConversation) {
+      Get.back();
+      return;
+    }
+    _conversation = args;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _controller.ensureMessagesLoaded(_conversation.id);
     });

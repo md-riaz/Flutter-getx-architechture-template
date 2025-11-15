@@ -32,4 +32,26 @@ class Todo {
       completedAt: completedAt ?? this.completedAt,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Todo &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          title == other.title &&
+          description == other.description &&
+          isCompleted == other.isCompleted &&
+          createdAt == other.createdAt &&
+          completedAt == other.completedAt;
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        title,
+        description,
+        isCompleted,
+        createdAt,
+        completedAt,
+      );
 }
