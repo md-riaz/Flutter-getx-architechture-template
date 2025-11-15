@@ -124,18 +124,26 @@ class LoginView extends GetView<LoginController> {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.error.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.red.withOpacity(0.5)),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.error.withOpacity(0.5),
+          ),
         ),
         child: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.red, size: 20),
+            Icon(
+              Icons.error_outline,
+              color: Theme.of(context).colorScheme.error,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 controller.errorMessage.value,
-                style: const TextStyle(color: Colors.red),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
               ),
             ),
           ],
