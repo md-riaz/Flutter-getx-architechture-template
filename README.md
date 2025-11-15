@@ -29,7 +29,9 @@ The app will start with a Dashboard that shows an Inventory Summary Card.
 - Tap "Examples" to see all UI components and responsive design in action
 - Try resizing the window to see responsive layouts adapt
 
-**📖 For detailed usage instructions, see [USAGE_GUIDE.md](USAGE_GUIDE.md)**
+**📖 Documentation:**
+- [USAGE_GUIDE.md](USAGE_GUIDE.md) - Complete usage guide with code examples
+- [RESPONSIVE_DESIGN.md](RESPONSIVE_DESIGN.md) - Responsive design patterns and best practices
 
 ## Structure
 
