@@ -18,7 +18,12 @@ class _CallDetailScreenState extends State<CallDetailScreen> {
   void initState() {
     super.initState();
     _controller = Get.find<CallDetailController>();
-    _call = Get.arguments as CallRecord;
+    final arguments = Get.arguments;
+    if (arguments is! CallRecord) {
+      Get.back();
+      return;
+    }
+    _call = arguments;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _controller.ensureLoaded(_call.id);
     });

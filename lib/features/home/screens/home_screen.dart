@@ -93,62 +93,64 @@ class _DashboardTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final available = controller.availableFeatures;
-    final enabledCards = features
-        .where((card) => available.contains(card.feature))
-        .toList();
+    return Obx(() {
+      final available = controller.availableFeatures;
+      final enabledCards = features
+          .where((card) => available.contains(card.feature))
+          .toList();
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        final user = controller.user.value;
-        if (user != null) {
-          controller.availableFeatures.assignAll(user.enabledFeatures);
-        }
-      },
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Enabled Modules',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          if (enabledCards.isEmpty)
+      return RefreshIndicator(
+        onRefresh: () async {
+          final user = controller.user.value;
+          if (user != null) {
+            controller.availableFeatures.assignAll(user.enabledFeatures);
+          }
+        },
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
             const Text(
-              'This account has no feature access. Contact your administrator.',
+              'Enabled Modules',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-          if (enabledCards.isNotEmpty)
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: enabledCards.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 1.2,
+            const SizedBox(height: 16),
+            if (enabledCards.isEmpty)
+              const Text(
+                'This account has no feature access. Contact your administrator.',
               ),
-              itemBuilder: (context, index) {
-                final card = enabledCards[index];
-                return _FeatureTile(card: card);
-              },
+            if (enabledCards.isNotEmpty)
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: enabledCards.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 1.2,
+                ),
+                itemBuilder: (context, index) {
+                  final card = enabledCards[index];
+                  return _FeatureTile(card: card);
+                },
+              ),
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: available
+                  .map(
+                    (feature) => Chip(
+                      avatar: Icon(_featureIcon(feature), size: 16),
+                      label: Text(feature.name.toUpperCase()),
+                    ),
+                  )
+                  .toList(),
             ),
-          const SizedBox(height: 24),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: available
-                .map(
-                  (feature) => Chip(
-                    avatar: Icon(_featureIcon(feature), size: 16),
-                    label: Text(feature.name.toUpperCase()),
-                  ),
-                )
-                .toList(),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 }
 

@@ -13,6 +13,7 @@ class SmsThreadController extends BaseController {
   final isLoading = false.obs;
   final errorMessage = RxnString();
   final Set<String> _loadedConversationIds = {};
+  final Set<String> _loadingConversationIds = {};
 
   SmsThreadController({required SmsService smsService})
       : _smsService = smsService;
@@ -22,11 +23,19 @@ class SmsThreadController extends BaseController {
   }
 
   Future<void> ensureMessagesLoaded(String conversationId) async {
-    if (_loadedConversationIds.contains(conversationId)) {
+    if (_loadedConversationIds.contains(conversationId) ||
+        _loadingConversationIds.contains(conversationId)) {
       return;
     }
-    await loadMessages(conversationId);
-    _loadedConversationIds.add(conversationId);
+    _loadingConversationIds.add(conversationId);
+    try {
+      await loadMessages(conversationId);
+      if (errorMessage.value == null) {
+        _loadedConversationIds.add(conversationId);
+      }
+    } finally {
+      _loadingConversationIds.remove(conversationId);
+    }
   }
 
   Future<void> loadMessages(String conversationId) async {

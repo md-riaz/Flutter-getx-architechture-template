@@ -26,7 +26,9 @@ class FaxDetailController extends BaseController {
       return;
     }
     await loadMessages(conversationId);
-    _loadedConversationIds.add(conversationId);
+    if (errorMessage.value == null) {
+      _loadedConversationIds.add(conversationId);
+    }
   }
 
   Future<void> loadMessages(String conversationId) async {

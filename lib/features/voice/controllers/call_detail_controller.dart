@@ -13,6 +13,7 @@ class CallDetailController extends BaseController {
   final isLoading = false.obs;
   final errorMessage = RxnString();
   final Map<String, CallRecord?> _cache = {};
+  final Set<String> _loading = {};
 
   CallDetailController({required VoiceService voiceService})
       : _voiceService = voiceService;
@@ -22,10 +23,15 @@ class CallDetailController extends BaseController {
   }
 
   Future<void> ensureLoaded(String id) async {
-    if (_cache.containsKey(id)) {
+    if (_cache.containsKey(id) || _loading.contains(id)) {
       return;
     }
-    await loadDetail(id);
+    _loading.add(id);
+    try {
+      await loadDetail(id);
+    } finally {
+      _loading.remove(id);
+    }
   }
 
   Future<void> loadDetail(String id) async {
@@ -33,7 +39,9 @@ class CallDetailController extends BaseController {
     errorMessage.value = null;
     try {
       final result = await _voiceService.fetchDetail(id);
-      _cache[id] = result;
+      if (result != null) {
+        _cache[id] = result;
+      }
     } catch (_) {
       errorMessage.value = 'Unable to load call detail';
     } finally {
