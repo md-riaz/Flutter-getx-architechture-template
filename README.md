@@ -67,6 +67,7 @@ The app will:
 
 **📖 Documentation:**
 - [AUTH_ARCHITECTURE.md](AUTH_ARCHITECTURE.md) - Authentication & 3-level bindings architecture
+- [REPOSITORY_PATTERN_GUIDE.md](REPOSITORY_PATTERN_GUIDE.md) - Repository pattern with local & remote data sources
 - [FEATURES.md](FEATURES.md) - Complete features overview and quick reference
 - [USAGE_GUIDE.md](USAGE_GUIDE.md) - Detailed usage guide with code examples
 - [RESPONSIVE_DESIGN.md](RESPONSIVE_DESIGN.md) - Responsive design patterns and best practices
