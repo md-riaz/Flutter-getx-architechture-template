@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../services/auth_service.dart';
 
 /// Custom app bar with common actions and responsive design
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -78,9 +80,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         tooltip: 'Profile',
         onSelected: (value) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Selected: $value')),
-          );
+          _handleMenuSelection(context, value);
         },
         itemBuilder: (context) => [
           const PopupMenuItem(
@@ -119,6 +119,51 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
     );
+  }
+
+  void _handleMenuSelection(BuildContext context, String value) {
+    if (value == 'logout') {
+      _handleLogout(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Selected: $value')),
+      );
+    }
+  }
+
+  void _handleLogout(BuildContext context) async {
+    // Show confirmation dialog
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true) {
+      try {
+        // Get the auth service and logout
+        final authService = Get.find<AuthService>();
+        await authService.logout();
+        
+        // Navigate to login screen
+        Get.offAllNamed('/login');
+      } catch (e) {
+        // Fallback if service not found
+        Get.offAllNamed('/login');
+      }
+    }
   }
 
   @override
