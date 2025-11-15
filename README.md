@@ -25,7 +25,11 @@ flutter run
 ```
 
 The app will start with a Dashboard that shows an Inventory Summary Card.
-Tap "View Inventory" to navigate to the Inventory screen.
+- Tap "View Inventory" to navigate to the Inventory screen
+- Tap "Examples" to see all UI components and responsive design in action
+- Try resizing the window to see responsive layouts adapt
+
+**📖 For detailed usage instructions, see [USAGE_GUIDE.md](USAGE_GUIDE.md)**
 
 ## Structure
 
@@ -43,14 +47,21 @@ getx_modular_template/
 │   ├── core/
 │   │   ├── bindings/
 │   │   │   └── app_bindings.dart
+│   │   ├── config/
+│   │   │   └── navigation_config.dart          # Centralized navigation
 │   │   ├── routes/
 │   │   │   ├── app_pages.dart
 │   │   │   └── app_routes.dart
 │   │   ├── services/
 │   │   │   ├── auth_service.dart
 │   │   │   └── api_client.dart
-│   │   └── theme/
-│   │       └── app_theme.dart
+│   │   ├── theme/
+│   │   │   └── app_theme.dart                  # Light & Dark themes
+│   │   └── widgets/
+│   │       ├── app_layout.dart                 # Responsive layout wrapper
+│   │       ├── custom_app_bar.dart             # Enhanced AppBar
+│   │       ├── responsive_builder.dart         # Responsive builder
+│   │       └── widgets.dart                    # Barrel export
 │   │
 │   ├── modules/
 │   │   ├── dashboard/
@@ -80,11 +91,20 @@ getx_modular_template/
 │   │   │       └── widgets/
 │   │   │           └── inventory_summary_card.dart
 │   │   │
+│   │   ├── examples/                           # UI components examples
+│   │   │   ├── bindings/
+│   │   │   │   └── examples_bindings.dart
+│   │   │   ├── controllers/
+│   │   │   │   └── examples_controller.dart
+│   │   │   └── views/
+│   │   │       └── examples_view.dart
+│   │   │
 │   │   └── session/
 │   │       └── session_manager_bindings.dart
 │   │
 │   └── main.dart
 │
+├── USAGE_GUIDE.md                              # Comprehensive usage guide
 └── pubspec.yaml
 ```
 
