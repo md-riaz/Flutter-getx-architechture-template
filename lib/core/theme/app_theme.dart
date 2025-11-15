@@ -238,7 +238,7 @@ class AppTheme {
       ),
       
       // Outlined Button Theme
-      outlinedButtonThemeData: OutlinedButtonThemeData(
+      outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           shape: AppThemeConfig.buttonShape,
           padding: EdgeInsets.symmetric(
