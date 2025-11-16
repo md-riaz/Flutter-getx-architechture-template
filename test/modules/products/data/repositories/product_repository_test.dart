@@ -5,16 +5,16 @@ import 'package:getx_modular_template/modules/products/data/models/product.dart'
 import 'package:getx_modular_template/modules/products/data/repositories/product_repository.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
-import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:http_mock_adapter/http_mock_adapter.dart';
 
 void main() {
   group('ProductRepository', () {
     late ProductRepository repository;
     late ProductRemoteDataSource remoteDataSource;
     late ProductLocalDataSource localDataSource;
-    late http.Client mockClient;
+    late Dio dio;
+    late DioAdapter dioAdapter;
 
     setUpAll(() async {
       // Initialize Hive for testing
@@ -23,28 +23,20 @@ void main() {
     });
 
     setUp(() async {
-      // Mock HTTP client for remote data source
-      mockClient = MockClient((request) async {
-        if (request.url.toString() == 'https://jsonplaceholder.typicode.com/posts') {
-          return http.Response(
-            json.encode([
-              {'id': 1, 'title': 'Test Product 1', 'body': 'Description 1', 'userId': 1},
-              {'id': 2, 'title': 'Test Product 2', 'body': 'Description 2', 'userId': 2},
-            ]),
-            200,
-          );
-        }
-        if (request.url.toString().startsWith('https://jsonplaceholder.typicode.com/posts/')) {
-          final id = request.url.pathSegments.last;
-          return http.Response(
-            json.encode({'id': int.parse(id), 'title': 'Test Product $id', 'body': 'Description $id', 'userId': 1}),
-            200,
-          );
-        }
-        return http.Response('Not Found', 404);
-      });
+      // Setup Dio with mock adapter for remote data source
+      dio = Dio(BaseOptions(baseUrl: 'https://jsonplaceholder.typicode.com'));
+      dioAdapter = DioAdapter(dio: dio);
+      
+      // Mock responses for common endpoints
+      dioAdapter.onGet(
+        '/posts',
+        (server) => server.reply(200, [
+          {'id': 1, 'title': 'Test Product 1', 'body': 'Description 1', 'userId': 1},
+          {'id': 2, 'title': 'Test Product 2', 'body': 'Description 2', 'userId': 2},
+        ]),
+      );
 
-      remoteDataSource = ProductRemoteDataSource(mockClient);
+      remoteDataSource = ProductRemoteDataSource(dio);
       localDataSource = ProductLocalDataSource();
       await localDataSource.init();
       repository = ProductRepository(remoteDataSource, localDataSource);

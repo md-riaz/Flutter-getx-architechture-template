@@ -1,31 +1,74 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import '../models/product.dart';
 import 'product_data_source.dart';
 
 /// Remote data source implementation for products
-/// This handles all API calls to JSONPlaceholder API
+/// This handles all API calls to JSONPlaceholder API using Dio
+/// Dio provides network interceptors for auth token injection and other middleware
 class ProductRemoteDataSource implements ProductDataSource {
   static const String baseUrl = 'https://jsonplaceholder.typicode.com';
-  final http.Client _client;
+  final Dio _dio;
 
-  ProductRemoteDataSource([http.Client? client]) 
-      : _client = client ?? http.Client();
+  ProductRemoteDataSource([Dio? dio]) 
+      : _dio = dio ?? Dio(BaseOptions(
+          baseUrl: baseUrl,
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 3),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ));
+
+  /// Configure interceptors for auth token injection and logging
+  void configureInterceptors({
+    String? authToken,
+    bool enableLogging = false,
+  }) {
+    _dio.interceptors.clear();
+    
+    // Add auth interceptor if token is provided
+    if (authToken != null) {
+      _dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            options.headers['Authorization'] = 'Bearer $authToken';
+            return handler.next(options);
+          },
+        ),
+      );
+    }
+    
+    // Add logging interceptor if enabled
+    if (enableLogging) {
+      _dio.interceptors.add(
+        LogInterceptor(
+          requestBody: true,
+          responseBody: true,
+          error: true,
+        ),
+      );
+    }
+  }
 
   @override
   Future<List<Product>> getProducts() async {
     try {
-      final response = await _client.get(
-        Uri.parse('$baseUrl/posts'),
-      );
+      final response = await _dio.get('/posts');
 
       if (response.statusCode == 200) {
-        final List<dynamic> jsonList = json.decode(response.body);
+        final List<dynamic> jsonList = response.data;
         // Limit to first 20 items for better performance
         return jsonList.take(20).map((json) => Product.fromJson(json)).toList();
       } else {
-        throw Exception('Failed to load products: ${response.statusCode}');
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          error: 'Failed to load products: ${response.statusCode}',
+        );
       }
+    } on DioException catch (e) {
+      throw Exception('Failed to load products: ${e.message}');
     } catch (e) {
       throw Exception('Failed to load products: $e');
     }
@@ -34,16 +77,19 @@ class ProductRemoteDataSource implements ProductDataSource {
   @override
   Future<Product> getProductById(String id) async {
     try {
-      final response = await _client.get(
-        Uri.parse('$baseUrl/posts/$id'),
-      );
+      final response = await _dio.get('/posts/$id');
 
       if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        return Product.fromJson(jsonData);
+        return Product.fromJson(response.data);
       } else {
-        throw Exception('Product not found with id: $id');
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          error: 'Product not found with id: $id',
+        );
       }
+    } on DioException catch (e) {
+      throw Exception('Failed to load product: ${e.message}');
     } catch (e) {
       throw Exception('Failed to load product: $e');
     }
@@ -52,24 +98,28 @@ class ProductRemoteDataSource implements ProductDataSource {
   @override
   Future<Product> createProduct(Product product) async {
     try {
-      final response = await _client.post(
-        Uri.parse('$baseUrl/posts'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
+      final response = await _dio.post(
+        '/posts',
+        data: {
           'title': product.name,
           'body': product.description,
           'userId': (product.price / 10).round(),
-        }),
+        },
       );
 
       if (response.statusCode == 201) {
-        final jsonData = json.decode(response.body);
-        return Product.fromJson(jsonData).copyWith(
+        return Product.fromJson(response.data).copyWith(
           lastUpdated: DateTime.now(),
         );
       } else {
-        throw Exception('Failed to create product: ${response.statusCode}');
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          error: 'Failed to create product: ${response.statusCode}',
+        );
       }
+    } on DioException catch (e) {
+      throw Exception('Failed to create product: ${e.message}');
     } catch (e) {
       throw Exception('Failed to create product: $e');
     }
@@ -78,25 +128,29 @@ class ProductRemoteDataSource implements ProductDataSource {
   @override
   Future<Product> updateProduct(Product product) async {
     try {
-      final response = await _client.put(
-        Uri.parse('$baseUrl/posts/${product.id}'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
+      final response = await _dio.put(
+        '/posts/${product.id}',
+        data: {
           'id': int.parse(product.id),
           'title': product.name,
           'body': product.description,
           'userId': (product.price / 10).round(),
-        }),
+        },
       );
 
       if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        return Product.fromJson(jsonData).copyWith(
+        return Product.fromJson(response.data).copyWith(
           lastUpdated: DateTime.now(),
         );
       } else {
-        throw Exception('Failed to update product: ${response.statusCode}');
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          error: 'Failed to update product: ${response.statusCode}',
+        );
       }
+    } on DioException catch (e) {
+      throw Exception('Failed to update product: ${e.message}');
     } catch (e) {
       throw Exception('Failed to update product: $e');
     }
@@ -105,13 +159,17 @@ class ProductRemoteDataSource implements ProductDataSource {
   @override
   Future<void> deleteProduct(String id) async {
     try {
-      final response = await _client.delete(
-        Uri.parse('$baseUrl/posts/$id'),
-      );
+      final response = await _dio.delete('/posts/$id');
 
       if (response.statusCode != 200) {
-        throw Exception('Failed to delete product: ${response.statusCode}');
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          error: 'Failed to delete product: ${response.statusCode}',
+        );
       }
+    } on DioException catch (e) {
+      throw Exception('Failed to delete product: ${e.message}');
     } catch (e) {
       throw Exception('Failed to delete product: $e');
     }
@@ -133,8 +191,8 @@ class ProductRemoteDataSource implements ProductDataSource {
     }
   }
   
-  /// Dispose the HTTP client
+  /// Close Dio instance
   void dispose() {
-    _client.close();
+    _dio.close();
   }
 }

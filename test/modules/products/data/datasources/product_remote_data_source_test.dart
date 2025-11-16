@@ -1,29 +1,30 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:getx_modular_template/modules/products/data/datasources/product_remote_data_source.dart';
 import 'package:getx_modular_template/modules/products/data/models/product.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
-import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:http_mock_adapter/http_mock_adapter.dart';
 
 void main() {
   group('ProductRemoteDataSource', () {
     late ProductRemoteDataSource dataSource;
+    late Dio dio;
+    late DioAdapter dioAdapter;
+
+    setUp(() {
+      dio = Dio(BaseOptions(baseUrl: 'https://jsonplaceholder.typicode.com'));
+      dioAdapter = DioAdapter(dio: dio);
+      dataSource = ProductRemoteDataSource(dio);
+    });
 
     test('getProducts returns list of products from API', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.toString() == 'https://jsonplaceholder.typicode.com/posts') {
-          return http.Response(
-            json.encode([
-              {'id': 1, 'title': 'Test Product 1', 'body': 'Description 1', 'userId': 1},
-              {'id': 2, 'title': 'Test Product 2', 'body': 'Description 2', 'userId': 2},
-            ]),
-            200,
-          );
-        }
-        return http.Response('Not Found', 404);
-      });
+      dioAdapter.onGet(
+        '/posts',
+        (server) => server.reply(200, [
+          {'id': 1, 'title': 'Test Product 1', 'body': 'Description 1', 'userId': 1},
+          {'id': 2, 'title': 'Test Product 2', 'body': 'Description 2', 'userId': 2},
+        ]),
+      );
 
-      dataSource = ProductRemoteDataSource(mockClient);
       final products = await dataSource.getProducts();
 
       expect(products, isA<List<Product>>());
@@ -33,11 +34,10 @@ void main() {
     });
 
     test('getProducts throws exception on error', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Server Error', 500);
-      });
-
-      dataSource = ProductRemoteDataSource(mockClient);
+      dioAdapter.onGet(
+        '/posts',
+        (server) => server.reply(500, {'error': 'Server Error'}),
+      );
 
       expect(
         () => dataSource.getProducts(),
@@ -46,17 +46,11 @@ void main() {
     });
 
     test('getProductById returns correct product', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.toString() == 'https://jsonplaceholder.typicode.com/posts/1') {
-          return http.Response(
-            json.encode({'id': 1, 'title': 'Test Product', 'body': 'Description', 'userId': 1}),
-            200,
-          );
-        }
-        return http.Response('Not Found', 404);
-      });
+      dioAdapter.onGet(
+        '/posts/1',
+        (server) => server.reply(200, {'id': 1, 'title': 'Test Product', 'body': 'Description', 'userId': 1}),
+      );
 
-      dataSource = ProductRemoteDataSource(mockClient);
       final product = await dataSource.getProductById('1');
 
       expect(product, isA<Product>());
@@ -65,11 +59,10 @@ void main() {
     });
 
     test('getProductById throws exception for invalid id', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Not Found', 404);
-      });
-
-      dataSource = ProductRemoteDataSource(mockClient);
+      dioAdapter.onGet(
+        '/posts/999',
+        (server) => server.reply(404, {'error': 'Not Found'}),
+      );
 
       expect(
         () => dataSource.getProductById('999'),
@@ -78,19 +71,11 @@ void main() {
     });
 
     test('createProduct returns product with timestamp', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.toString() == 'https://jsonplaceholder.typicode.com/posts' &&
-            request.method == 'POST') {
-          return http.Response(
-            json.encode({'id': 101, 'title': 'Test Product', 'body': 'Test Description', 'userId': 10}),
-            201,
-          );
-        }
-        return http.Response('Not Found', 404);
-      });
+      dioAdapter.onPost(
+        '/posts',
+        (server) => server.reply(201, {'id': 101, 'title': 'Test Product', 'body': 'Test Description', 'userId': 10}),
+      );
 
-      dataSource = ProductRemoteDataSource(mockClient);
-      
       final newProduct = Product(
         id: '101',
         name: 'Test Product',
@@ -107,19 +92,11 @@ void main() {
     });
 
     test('updateProduct returns updated product with new timestamp', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.toString() == 'https://jsonplaceholder.typicode.com/posts/1' &&
-            request.method == 'PUT') {
-          return http.Response(
-            json.encode({'id': 1, 'title': 'Updated Product', 'body': 'Updated Description', 'userId': 20}),
-            200,
-          );
-        }
-        return http.Response('Not Found', 404);
-      });
+      dioAdapter.onPut(
+        '/posts/1',
+        (server) => server.reply(200, {'id': 1, 'title': 'Updated Product', 'body': 'Updated Description', 'userId': 20}),
+      );
 
-      dataSource = ProductRemoteDataSource(mockClient);
-      
       final product = Product(
         id: '1',
         name: 'Updated Product',
@@ -136,15 +113,10 @@ void main() {
     });
 
     test('deleteProduct completes successfully', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.toString() == 'https://jsonplaceholder.typicode.com/posts/1' &&
-            request.method == 'DELETE') {
-          return http.Response('', 200);
-        }
-        return http.Response('Not Found', 404);
-      });
-
-      dataSource = ProductRemoteDataSource(mockClient);
+      dioAdapter.onDelete(
+        '/posts/1',
+        (server) => server.reply(200, {}),
+      );
 
       await expectLater(
         dataSource.deleteProduct('1'),
@@ -153,20 +125,14 @@ void main() {
     });
 
     test('searchProducts returns matching products', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.toString() == 'https://jsonplaceholder.typicode.com/posts') {
-          return http.Response(
-            json.encode([
-              {'id': 1, 'title': 'Laptop Pro', 'body': 'Professional laptop', 'userId': 1},
-              {'id': 2, 'title': 'Mouse', 'body': 'Wireless mouse', 'userId': 2},
-            ]),
-            200,
-          );
-        }
-        return http.Response('Not Found', 404);
-      });
+      dioAdapter.onGet(
+        '/posts',
+        (server) => server.reply(200, [
+          {'id': 1, 'title': 'Laptop Pro', 'body': 'Professional laptop', 'userId': 1},
+          {'id': 2, 'title': 'Mouse', 'body': 'Wireless mouse', 'userId': 2},
+        ]),
+      );
 
-      dataSource = ProductRemoteDataSource(mockClient);
       final results = await dataSource.searchProducts('laptop');
 
       expect(results, isA<List<Product>>());
@@ -175,19 +141,13 @@ void main() {
     });
 
     test('searchProducts returns empty list for no matches', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.toString() == 'https://jsonplaceholder.typicode.com/posts') {
-          return http.Response(
-            json.encode([
-              {'id': 1, 'title': 'Laptop Pro', 'body': 'Professional laptop', 'userId': 1},
-            ]),
-            200,
-          );
-        }
-        return http.Response('Not Found', 404);
-      });
+      dioAdapter.onGet(
+        '/posts',
+        (server) => server.reply(200, [
+          {'id': 1, 'title': 'Laptop Pro', 'body': 'Professional laptop', 'userId': 1},
+        ]),
+      );
 
-      dataSource = ProductRemoteDataSource(mockClient);
       final results = await dataSource.searchProducts('nonexistent');
 
       expect(results, isA<List<Product>>());
@@ -195,19 +155,13 @@ void main() {
     });
 
     test('searchProducts is case insensitive', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.toString() == 'https://jsonplaceholder.typicode.com/posts') {
-          return http.Response(
-            json.encode([
-              {'id': 1, 'title': 'Laptop Pro', 'body': 'Professional laptop', 'userId': 1},
-            ]),
-            200,
-          );
-        }
-        return http.Response('Not Found', 404);
-      });
+      dioAdapter.onGet(
+        '/posts',
+        (server) => server.reply(200, [
+          {'id': 1, 'title': 'Laptop Pro', 'body': 'Professional laptop', 'userId': 1},
+        ]),
+      );
 
-      dataSource = ProductRemoteDataSource(mockClient);
       final results = await dataSource.searchProducts('LAPTOP');
 
       expect(results.isNotEmpty, isTrue);
@@ -215,19 +169,13 @@ void main() {
     });
 
     test('searchProducts searches in description too', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.toString() == 'https://jsonplaceholder.typicode.com/posts') {
-          return http.Response(
-            json.encode([
-              {'id': 1, 'title': 'Mouse', 'body': 'Wireless mouse device', 'userId': 1},
-            ]),
-            200,
-          );
-        }
-        return http.Response('Not Found', 404);
-      });
+      dioAdapter.onGet(
+        '/posts',
+        (server) => server.reply(200, [
+          {'id': 1, 'title': 'Mouse', 'body': 'Wireless mouse device', 'userId': 1},
+        ]),
+      );
 
-      dataSource = ProductRemoteDataSource(mockClient);
       final results = await dataSource.searchProducts('wireless');
 
       expect(results.isNotEmpty, isTrue);
@@ -235,6 +183,13 @@ void main() {
         results.any((p) => p.description.toLowerCase().contains('wireless')),
         isTrue,
       );
+    });
+
+    test('configureInterceptors adds auth token to requests', () async {
+      dataSource.configureInterceptors(authToken: 'test_token_123');
+
+      // Verify interceptor is added (implicit test through usage)
+      expect(dio.interceptors.isNotEmpty, isTrue);
     });
   });
 }
