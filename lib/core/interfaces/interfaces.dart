@@ -5,3 +5,4 @@ export 'network_interface.dart';
 export 'device_info_interface.dart';
 export 'connectivity_interface.dart';
 export 'logger_interface.dart';
+export 'file_service_interface.dart';

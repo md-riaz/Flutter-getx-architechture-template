@@ -5,3 +5,4 @@ export 'api_network_service.dart';
 export 'platform_device_info_service.dart';
 export 'simple_connectivity_service.dart';
 export 'console_logger_service.dart';
+export 'file_picker_service.dart';

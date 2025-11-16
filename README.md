@@ -15,7 +15,8 @@ A starter template for building **feature-first, modular Flutter apps** using **
   - Core layer for bindings, routes, services (`core/`)
   - Repository + DTO + Model pattern
   - Reactive UI with GetX (`Obx`, `GetView`)
-  - **Native interfaces** for swappable implementations (storage, network, device info, connectivity, logging)
+  - **Native interfaces** for swappable implementations (storage, network, device info, connectivity, logging, files)
+  - **Laravel-style facades** with service locator (get_it) for clean, static access
 - **UI & Navigation**
   - Example feature: `inventory`
   - Composable dashboard with feature detection
@@ -73,6 +74,7 @@ The app will:
 - [THEME_CONFIGURATION.md](THEME_CONFIGURATION.md) - Theme customization and branding guide
 - [NATIVE_INTERFACES.md](NATIVE_INTERFACES.md) - Native interfaces architecture and design
 - [INTERFACES_USAGE.md](lib/core/interfaces/INTERFACES_USAGE.md) - Native interfaces usage guide and examples
+- [LARAVEL_STYLE_SERVICES.md](LARAVEL_STYLE_SERVICES.md) - **NEW!** Laravel-style facades and service locator
 
 ## Structure
 
@@ -496,6 +498,58 @@ To change from in-memory storage to SharedPreferences:
 4. All existing code works without changes! 🎉
 
 See [INTERFACES_USAGE.md](lib/core/interfaces/INTERFACES_USAGE.md) for detailed documentation and examples.
+
+## Laravel-Style Service Layer 🚀 NEW!
+
+For developers who love Laravel's elegant API, this template now includes **Facades** and a **Service Locator** pattern!
+
+### Clean, Static Access (Like Laravel)
+
+```dart
+import 'package:your_app/core/facades/facades.dart';
+
+// Storage - No dependency injection needed!
+await Storage.set('user_token', token);
+final token = await Storage.get('user_token');
+
+// Logging - Simple and clean
+Log.info('User logged in', data: {'userId': user.id});
+Log.error('Login failed', error: exception);
+
+// File Picking - Just like Laravel's Storage
+final filePath = await Files.pick();
+final images = await Files.pickImages();
+await Files.save(fileName: 'report.pdf', bytes: pdfBytes);
+```
+
+### Setup (One-time)
+
+```dart
+// In main.dart
+import 'core/service_locator/service_locator.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await setupServiceLocator(); // Initialize once
+  runApp(MyApp());
+}
+```
+
+### Benefits
+
+- 🎯 **Laravel-like DX** - Clean, readable, no boilerplate
+- 🔌 **Service Locator** - Automatic dependency injection with get_it
+- 🎭 **Facades** - Static access to services (Storage, Log, Files)
+- 🧪 **Still Testable** - Mock the service locator in tests
+- 🔄 **Swap Anytime** - Change implementations without code changes
+
+### Available Facades
+
+- `Storage` - Storage.set(), Storage.get(), Storage.clear()
+- `Log` - Log.info(), Log.error(), Log.debug()
+- `Files` - Files.pick(), Files.save(), Files.delete()
+
+See [LARAVEL_STYLE_SERVICES.md](LARAVEL_STYLE_SERVICES.md) for complete guide with real-world examples!
 
 ## Notes
 
