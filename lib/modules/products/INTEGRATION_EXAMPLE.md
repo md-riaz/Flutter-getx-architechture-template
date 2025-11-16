@@ -31,9 +31,20 @@ class ProductsBindings extends Bindings {
       tag: 'session', // Session-level, will be disposed on logout
     );
     
-    // Register remote data source (uses JSONPlaceholder API)
-    Get.lazyPut<ProductRemoteDataSource>(
-      () => ProductRemoteDataSource(),
+    // Register remote data source (uses Dio with JSONPlaceholder API)
+    final remoteDataSource = ProductRemoteDataSource();
+    
+    // Configure auth interceptor (if user is logged in)
+    final authToken = Get.find<AuthService>().token; // Get token from auth service
+    if (authToken != null) {
+      remoteDataSource.configureInterceptors(
+        authToken: authToken,
+        enableLogging: true, // Enable for development
+      );
+    }
+    
+    Get.put<ProductRemoteDataSource>(
+      remoteDataSource,
       tag: 'session',
     );
     

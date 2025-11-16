@@ -86,11 +86,13 @@ abstract class ProductDataSource {
 ```
 
 ### 2. Remote Data Source
-Handles all API communication with **JSONPlaceholder API**:
-- Uses `http` package for real REST API calls
+Handles all API communication with **JSONPlaceholder API** using **Dio**:
+- Uses Dio package with interceptor support
 - Connects to https://jsonplaceholder.typicode.com
 - Returns fresh data from the server
-- Proper error handling for network failures
+- Network interceptors for auth token injection
+- Built-in request/response logging
+- Proper error handling with DioException
 
 ### 3. Local Data Source
 Manages local caching with **Hive**:
@@ -128,8 +130,14 @@ Hive.registerAdapter(ProductAdapter());
 final localDataSource = ProductLocalDataSource();
 await localDataSource.init();
 
-// Create remote data source (uses JSONPlaceholder API)
+// Create remote data source with Dio (uses JSONPlaceholder API)
 final remoteDataSource = ProductRemoteDataSource();
+
+// Configure auth interceptor (after user login)
+remoteDataSource.configureInterceptors(
+  authToken: userToken, // Automatically adds Bearer token to all requests
+  enableLogging: true,
+);
 
 // Create repository with both data sources
 final repository = ProductRepository(

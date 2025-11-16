@@ -46,7 +46,7 @@ This module demonstrates the **Repository Pattern** with separate **Local** and 
 
 #### ProductRemoteDataSource
 - Handles all API calls to **JSONPlaceholder API** (https://jsonplaceholder.typicode.com)
-- Uses `http` package for REST API communication
+- Uses **Dio** package - powerful HTTP client with interceptor support
 - Returns fresh data from the server
 - Real API integration with proper error handling
 
@@ -57,6 +57,24 @@ This module demonstrates the **Repository Pattern** with separate **Local** and 
 - `PUT /posts/:id` → `updateProduct(product)` - Update existing product
 - `DELETE /posts/:id` → `deleteProduct(id)` - Delete product from server
 - Search is implemented by fetching all and filtering locally
+
+**Dio Features:**
+- **Network Interceptors** - Automatically inject auth tokens into requests
+- **Logging Interceptor** - Log requests/responses for debugging
+- **Timeout Configuration** - Connect and receive timeouts
+- **Error Handling** - DioException for better error management
+
+**Interceptor Configuration:**
+```dart
+// Configure auth token to be added to all requests
+remoteDataSource.configureInterceptors(
+  authToken: 'your_jwt_token_here',
+  enableLogging: true,
+);
+
+// All subsequent requests will include:
+// Authorization: Bearer your_jwt_token_here
+```
 
 **Note:** JSONPlaceholder posts are mapped to Product model for demonstration.
 
@@ -133,7 +151,13 @@ Hive.registerAdapter(ProductAdapter());
 final localDataSource = ProductLocalDataSource();
 await localDataSource.init(); // Initialize Hive boxes
 
-final remoteDataSource = ProductRemoteDataSource(); // Uses http.Client
+final remoteDataSource = ProductRemoteDataSource(); // Uses Dio with interceptors
+
+// Configure auth token interceptor (optional)
+remoteDataSource.configureInterceptors(
+  authToken: 'your_jwt_token_here', // Will be added as Bearer token
+  enableLogging: true, // Enable request/response logging
+);
 
 // Create repository with both data sources
 final repository = ProductRepository(
@@ -144,13 +168,13 @@ final repository = ProductRepository(
 // Fetch products (uses cache if valid)
 final products = await repository.getProducts();
 
-// Force refresh from remote API
+// Force refresh from remote API (with auth token)
 final freshProducts = await repository.getProducts(forceRefresh: true);
 
 // Get single product
 final product = await repository.getProductById('1');
 
-// Create new product (sent to JSONPlaceholder API)
+// Create new product (sent to JSONPlaceholder API with auth header)
 final newProduct = Product(
   id: '101',
   name: 'New Product',
