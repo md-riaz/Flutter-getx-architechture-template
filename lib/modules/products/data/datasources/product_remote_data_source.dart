@@ -75,6 +75,38 @@ class ProductRemoteDataSource implements ProductDataSource {
   }
 
   @override
+  Future<List<Product>> getProductsPaginated({
+    required int pageKey,
+    int pageSize = 20,
+  }) async {
+    try {
+      // JSONPlaceholder has 100 posts, we'll use pagination parameters
+      final response = await _dio.get(
+        '/posts',
+        queryParameters: {
+          '_page': pageKey,
+          '_limit': pageSize,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonList = response.data;
+        return jsonList.map((json) => Product.fromJson(json)).toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          error: 'Failed to load products: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      throw Exception('Failed to load products: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to load products: $e');
+    }
+  }
+
+  @override
   Future<Product> getProductById(String id) async {
     try {
       final response = await _dio.get('/posts/$id');

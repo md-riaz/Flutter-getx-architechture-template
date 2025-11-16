@@ -191,5 +191,43 @@ void main() {
       // Verify interceptor is added (implicit test through usage)
       expect(dio.interceptors.isNotEmpty, isTrue);
     });
+
+    test('getProductsPaginated returns paginated products', () async {
+      dioAdapter.onGet(
+        '/posts',
+        (server) => server.reply(200, [
+          {'id': 1, 'title': 'Product 1', 'body': 'Description 1', 'userId': 1},
+          {'id': 2, 'title': 'Product 2', 'body': 'Description 2', 'userId': 2},
+          {'id': 3, 'title': 'Product 3', 'body': 'Description 3', 'userId': 3},
+        ]),
+        queryParameters: {'_page': 1, '_limit': 20},
+      );
+
+      final products = await dataSource.getProductsPaginated(
+        pageKey: 1,
+        pageSize: 20,
+      );
+
+      expect(products, isA<List<Product>>());
+      expect(products.length, 3);
+    });
+
+    test('getProductsPaginated handles different page sizes', () async {
+      dioAdapter.onGet(
+        '/posts',
+        (server) => server.reply(200, [
+          {'id': 1, 'title': 'Product 1', 'body': 'Description 1', 'userId': 1},
+          {'id': 2, 'title': 'Product 2', 'body': 'Description 2', 'userId': 2},
+        ]),
+        queryParameters: {'_page': 1, '_limit': 2},
+      );
+
+      final products = await dataSource.getProductsPaginated(
+        pageKey: 1,
+        pageSize: 2,
+      );
+
+      expect(products.length, 2);
+    });
   });
 }

@@ -55,6 +55,25 @@ class ProductRepository {
     return _fetchFromRemoteAndCache();
   }
 
+  /// Get products with pagination support
+  /// 
+  /// Strategy:
+  /// Always fetches from remote for pagination to ensure fresh data
+  /// and proper page boundaries. Cache is not used for paginated requests
+  /// to avoid inconsistencies with page boundaries.
+  /// 
+  /// [pageKey] - The page number to fetch (1-based)
+  /// [pageSize] - Number of items per page
+  Future<List<Product>> getProductsPaginated({
+    required int pageKey,
+    int pageSize = 20,
+  }) async {
+    return await _remoteDataSource.getProductsPaginated(
+      pageKey: pageKey,
+      pageSize: pageSize,
+    );
+  }
+
   /// Get a single product by ID
   /// 
   /// Strategy:

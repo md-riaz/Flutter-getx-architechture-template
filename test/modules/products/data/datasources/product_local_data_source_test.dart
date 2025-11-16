@@ -235,6 +235,63 @@ void main() {
       expect(dataSource.getCacheTimestamp(), isNotNull);
     });
 
+    test('getProductsPaginated returns paginated subset', () async {
+      final products = List.generate(50, (i) => Product(
+        id: '${i + 1}',
+        name: 'Product ${i + 1}',
+        description: 'Description ${i + 1}',
+        price: 99.99 + i,
+        stock: 10 + i,
+      ));
+
+      await dataSource.cacheProducts(products);
+
+      // Get first page (20 items)
+      final page1 = await dataSource.getProductsPaginated(
+        pageKey: 1,
+        pageSize: 20,
+      );
+      expect(page1.length, 20);
+      expect(page1.first.id, '1');
+      expect(page1.last.id, '20');
+
+      // Get second page (20 items)
+      final page2 = await dataSource.getProductsPaginated(
+        pageKey: 2,
+        pageSize: 20,
+      );
+      expect(page2.length, 20);
+      expect(page2.first.id, '21');
+      expect(page2.last.id, '40');
+
+      // Get third page (10 items remaining)
+      final page3 = await dataSource.getProductsPaginated(
+        pageKey: 3,
+        pageSize: 20,
+      );
+      expect(page3.length, 10);
+      expect(page3.first.id, '41');
+      expect(page3.last.id, '50');
+    });
+
+    test('getProductsPaginated returns empty list beyond available data', () async {
+      final products = List.generate(5, (i) => Product(
+        id: '${i + 1}',
+        name: 'Product ${i + 1}',
+        description: 'Description ${i + 1}',
+        price: 99.99,
+        stock: 10,
+      ));
+
+      await dataSource.cacheProducts(products);
+
+      final page = await dataSource.getProductsPaginated(
+        pageKey: 2,
+        pageSize: 20,
+      );
+      expect(page.isEmpty, isTrue);
+    });
+
     test('cacheProducts clears existing cache', () async {
       final initialProducts = [
         Product(

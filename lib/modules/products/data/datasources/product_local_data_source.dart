@@ -38,6 +38,30 @@ class ProductLocalDataSource implements ProductDataSource {
   }
 
   @override
+  Future<List<Product>> getProductsPaginated({
+    required int pageKey,
+    int pageSize = 20,
+  }) async {
+    await _ensureInitialized();
+    final allProducts = _box!.values.toList();
+    
+    // Calculate pagination
+    final startIndex = (pageKey - 1) * pageSize;
+    final endIndex = startIndex + pageSize;
+    
+    // Return empty list if startIndex is beyond list length
+    if (startIndex >= allProducts.length) {
+      return [];
+    }
+    
+    // Return paginated subset
+    return allProducts.sublist(
+      startIndex,
+      endIndex > allProducts.length ? allProducts.length : endIndex,
+    );
+  }
+
+  @override
   Future<Product> getProductById(String id) async {
     await _ensureInitialized();
     final product = _box!.get(id);

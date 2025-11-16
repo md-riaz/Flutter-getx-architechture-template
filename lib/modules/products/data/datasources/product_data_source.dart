@@ -6,6 +6,14 @@ abstract class ProductDataSource {
   /// Fetch all products
   Future<List<Product>> getProducts();
 
+  /// Fetch products with pagination support
+  /// [pageKey] - The page number or offset to fetch
+  /// [pageSize] - Number of items per page
+  Future<List<Product>> getProductsPaginated({
+    required int pageKey,
+    int pageSize = 20,
+  });
+
   /// Fetch a single product by ID
   Future<Product> getProductById(String id);
 
