@@ -15,6 +15,8 @@ A starter template for building **feature-first, modular Flutter apps** using **
   - Core layer for bindings, routes, services (`core/`)
   - Repository + DTO + Model pattern
   - Reactive UI with GetX (`Obx`, `GetView`)
+  - **Native interfaces** for swappable implementations (storage, network, device info, connectivity, logging, files)
+  - **Laravel-style facades** with service locator (get_it) for clean, static access
 - **UI & Navigation**
   - Example feature: `inventory`
   - Composable dashboard with feature detection
@@ -70,6 +72,9 @@ The app will:
 - [USAGE_GUIDE.md](USAGE_GUIDE.md) - Detailed usage guide with code examples
 - [RESPONSIVE_DESIGN.md](RESPONSIVE_DESIGN.md) - Responsive design patterns and best practices
 - [THEME_CONFIGURATION.md](THEME_CONFIGURATION.md) - Theme customization and branding guide
+- [NATIVE_INTERFACES.md](NATIVE_INTERFACES.md) - Native interfaces architecture and design
+- [INTERFACES_USAGE.md](lib/core/interfaces/INTERFACES_USAGE.md) - Native interfaces usage guide and examples
+- [LARAVEL_STYLE_SERVICES.md](LARAVEL_STYLE_SERVICES.md) - **NEW!** Laravel-style facades and service locator
 
 ## Structure
 
@@ -102,6 +107,20 @@ getx_modular_template/
 │   │   ├── routes/
 │   │   │   ├── app_pages.dart
 │   │   │   └── app_routes.dart
+│   │   ├── interfaces/
+│   │   │   ├── storage_interface.dart           # Storage abstraction
+│   │   │   ├── network_interface.dart           # Network abstraction
+│   │   │   ├── device_info_interface.dart       # Device info abstraction
+│   │   │   ├── connectivity_interface.dart      # Connectivity abstraction
+│   │   │   ├── logger_interface.dart            # Logger abstraction
+│   │   │   └── interfaces.dart                  # Barrel export
+│   │   ├── implementations/
+│   │   │   ├── memory_storage_service.dart      # In-memory storage impl
+│   │   │   ├── api_network_service.dart         # Network impl
+│   │   │   ├── platform_device_info_service.dart # Device info impl
+│   │   │   ├── simple_connectivity_service.dart # Connectivity impl
+│   │   │   ├── console_logger_service.dart      # Logger impl
+│   │   │   └── implementations.dart             # Barrel export
 │   │   ├── services/
 │   │   │   ├── api_client.dart
 │   │   │   ├── auth_service.dart               # Auth state management
@@ -239,6 +258,8 @@ The `core/` directory contains application-wide configurations and services:
 
 - **bindings/** - Global and session-level dependency injection
 - **data/** - Core data models and repositories (User, AuthRepository)
+- **interfaces/** - Abstract interfaces for native functionality (swappable implementations)
+- **implementations/** - Concrete implementations of interfaces (easily replaceable)
 - **middleware/** - Route guards and middleware (AuthMiddleware)
 - **routes/** - Navigation configuration with GetX
 - **services/** - Shared services (API client, authentication, session management)
@@ -430,6 +451,105 @@ Visit the **Examples** page in the app to see:
 - Adaptive layouts for different devices
 - Card components
 - Navigation demonstrations
+
+## Native Interfaces
+
+This template includes abstraction layers for common native functionalities, making it easy to swap implementations without changing business logic:
+
+### Available Interfaces
+
+- **IStorageService** - Local storage (SharedPreferences, Hive, Secure Storage)
+- **INetworkService** - HTTP operations (Dio, http package, Chopper)
+- **IDeviceInfoService** - Device information (device_info_plus, platform)
+- **IConnectivityService** - Network connectivity (connectivity_plus)
+- **ILoggerService** - Logging (logger package, firebase_crashlytics)
+
+### Benefits
+
+- ✅ **Easy Testing** - Mock interfaces for unit tests
+- ✅ **Swappable Implementations** - Change storage/network providers without refactoring
+- ✅ **Clean Architecture** - Business logic decoupled from implementation details
+- ✅ **Future-Proof** - Add new providers without breaking existing code
+
+### Quick Example
+
+```dart
+// Use storage in your service
+final storage = Get.find<IStorageService>();
+await storage.setString('user_token', token);
+final token = await storage.getString('user_token');
+
+// Use network in your repository  
+final network = Get.find<INetworkService>();
+final response = await network.post('/api/users', body: userData);
+
+// Use logger anywhere
+final logger = Get.find<ILoggerService>();
+logger.info('Operation completed', data: {'userId': 123});
+```
+
+### Swapping Implementations
+
+To change from in-memory storage to SharedPreferences:
+
+1. Add package: `shared_preferences: ^2.2.0`
+2. Create implementation: `SharedPreferencesStorageService`
+3. Update binding: `Get.put<IStorageService>(SharedPreferencesStorageService())`
+4. All existing code works without changes! 🎉
+
+See [INTERFACES_USAGE.md](lib/core/interfaces/INTERFACES_USAGE.md) for detailed documentation and examples.
+
+## Laravel-Style Service Layer 🚀 NEW!
+
+For developers who love Laravel's elegant API, this template now includes **Facades** and a **Service Locator** pattern!
+
+### Clean, Static Access (Like Laravel)
+
+```dart
+import 'package:your_app/core/facades/facades.dart';
+
+// Storage - No dependency injection needed!
+await Storage.set('user_token', token);
+final token = await Storage.get('user_token');
+
+// Logging - Simple and clean
+Log.info('User logged in', data: {'userId': user.id});
+Log.error('Login failed', error: exception);
+
+// File Picking - Just like Laravel's Storage
+final filePath = await Files.pick();
+final images = await Files.pickImages();
+await Files.save(fileName: 'report.pdf', bytes: pdfBytes);
+```
+
+### Setup (One-time)
+
+```dart
+// In main.dart
+import 'core/service_locator/service_locator.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await setupServiceLocator(); // Initialize once
+  runApp(MyApp());
+}
+```
+
+### Benefits
+
+- 🎯 **Laravel-like DX** - Clean, readable, no boilerplate
+- 🔌 **Service Locator** - Automatic dependency injection with get_it
+- 🎭 **Facades** - Static access to services (Storage, Log, Files)
+- 🧪 **Still Testable** - Mock the service locator in tests
+- 🔄 **Swap Anytime** - Change implementations without code changes
+
+### Available Facades
+
+- `Storage` - Storage.set(), Storage.get(), Storage.clear()
+- `Log` - Log.info(), Log.error(), Log.debug()
+- `Files` - Files.pick(), Files.save(), Files.delete()
+
+See [LARAVEL_STYLE_SERVICES.md](LARAVEL_STYLE_SERVICES.md) for complete guide with real-world examples!
 
 ## Notes
 
