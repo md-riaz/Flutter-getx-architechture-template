@@ -1,17 +1,27 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:getx_modular_template/modules/products/data/datasources/product_local_data_source.dart';
 import 'package:getx_modular_template/modules/products/data/models/product.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 void main() {
   group('ProductLocalDataSource', () {
     late ProductLocalDataSource dataSource;
 
-    setUp(() {
+    setUpAll(() async {
+      // Initialize Hive for testing
+      await Hive.initFlutter();
+      Hive.registerAdapter(ProductAdapter());
+    });
+
+    setUp(() async {
       dataSource = ProductLocalDataSource();
+      await dataSource.init();
     });
 
     tearDown(() async {
       await dataSource.clearCache();
+      await dataSource.close();
     });
 
     test('initial cache is empty', () async {

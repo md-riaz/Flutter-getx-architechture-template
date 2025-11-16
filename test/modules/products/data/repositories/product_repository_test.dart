@@ -1,26 +1,58 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:getx_modular_template/core/services/api_client.dart';
 import 'package:getx_modular_template/modules/products/data/datasources/product_local_data_source.dart';
 import 'package:getx_modular_template/modules/products/data/datasources/product_remote_data_source.dart';
 import 'package:getx_modular_template/modules/products/data/models/product.dart';
 import 'package:getx_modular_template/modules/products/data/repositories/product_repository.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'dart:convert';
 
 void main() {
   group('ProductRepository', () {
     late ProductRepository repository;
     late ProductRemoteDataSource remoteDataSource;
     late ProductLocalDataSource localDataSource;
-    late ApiClient apiClient;
+    late http.Client mockClient;
 
-    setUp(() {
-      apiClient = ApiClient();
-      remoteDataSource = ProductRemoteDataSource(apiClient);
+    setUpAll(() async {
+      // Initialize Hive for testing
+      await Hive.initFlutter();
+      Hive.registerAdapter(ProductAdapter());
+    });
+
+    setUp(() async {
+      // Mock HTTP client for remote data source
+      mockClient = MockClient((request) async {
+        if (request.url.toString() == 'https://jsonplaceholder.typicode.com/posts') {
+          return http.Response(
+            json.encode([
+              {'id': 1, 'title': 'Test Product 1', 'body': 'Description 1', 'userId': 1},
+              {'id': 2, 'title': 'Test Product 2', 'body': 'Description 2', 'userId': 2},
+            ]),
+            200,
+          );
+        }
+        if (request.url.toString().startsWith('https://jsonplaceholder.typicode.com/posts/')) {
+          final id = request.url.pathSegments.last;
+          return http.Response(
+            json.encode({'id': int.parse(id), 'title': 'Test Product $id', 'body': 'Description $id', 'userId': 1}),
+            200,
+          );
+        }
+        return http.Response('Not Found', 404);
+      });
+
+      remoteDataSource = ProductRemoteDataSource(mockClient);
       localDataSource = ProductLocalDataSource();
+      await localDataSource.init();
       repository = ProductRepository(remoteDataSource, localDataSource);
     });
 
     tearDown(() async {
       await localDataSource.clearCache();
+      await localDataSource.close();
     });
 
     group('getProducts', () {

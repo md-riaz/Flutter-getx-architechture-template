@@ -1,78 +1,80 @@
+import 'package:hive/hive.dart';
 import '../models/product.dart';
 import 'product_data_source.dart';
 
-/// Local data source implementation for products
+/// Local data source implementation for products using Hive
 /// This handles caching and local storage of product data
-/// In a real app, this would use SharedPreferences, Hive, SQLite, etc.
-/// For this example, we use an in-memory cache
 class ProductLocalDataSource implements ProductDataSource {
-  // In-memory cache for demonstration
-  // In a real app, you would use SharedPreferences, Hive, SQLite, etc.
-  final Map<String, Product> _cache = {};
-  DateTime? _cacheTimestamp;
+  static const String _boxName = 'products';
+  static const String _timestampKey = 'cache_timestamp';
+  
+  Box<Product>? _box;
+  Box<String>? _metaBox;
 
   /// Cache expiry duration (5 minutes for example)
   static const Duration cacheExpiry = Duration(minutes: 5);
 
+  /// Initialize Hive boxes
+  Future<void> init() async {
+    if (_box == null || !_box!.isOpen) {
+      _box = await Hive.openBox<Product>(_boxName);
+    }
+    if (_metaBox == null || !_metaBox!.isOpen) {
+      _metaBox = await Hive.openBox<String>('${_boxName}_meta');
+    }
+  }
+
+  /// Ensure boxes are initialized
+  Future<void> _ensureInitialized() async {
+    if (_box == null || !_box!.isOpen) {
+      await init();
+    }
+  }
+
   @override
   Future<List<Product>> getProducts() async {
-    // Simulate local storage access delay (much faster than remote)
-    await Future.delayed(const Duration(milliseconds: 50));
-
-    return _cache.values.toList();
+    await _ensureInitialized();
+    return _box!.values.toList();
   }
 
   @override
   Future<Product> getProductById(String id) async {
-    // Simulate local storage access delay
-    await Future.delayed(const Duration(milliseconds: 30));
-
-    final product = _cache[id];
+    await _ensureInitialized();
+    final product = _box!.get(id);
     if (product == null) {
       throw Exception('Product not found in cache: $id');
     }
-
     return product;
   }
 
   @override
   Future<Product> createProduct(Product product) async {
-    // Simulate local storage write delay
-    await Future.delayed(const Duration(milliseconds: 40));
-
-    _cache[product.id] = product;
-    _updateCacheTimestamp();
-
+    await _ensureInitialized();
+    await _box!.put(product.id, product);
+    await _updateCacheTimestamp();
     return product;
   }
 
   @override
   Future<Product> updateProduct(Product product) async {
-    // Simulate local storage write delay
-    await Future.delayed(const Duration(milliseconds: 40));
-
-    _cache[product.id] = product;
-    _updateCacheTimestamp();
-
+    await _ensureInitialized();
+    await _box!.put(product.id, product);
+    await _updateCacheTimestamp();
     return product;
   }
 
   @override
   Future<void> deleteProduct(String id) async {
-    // Simulate local storage delete delay
-    await Future.delayed(const Duration(milliseconds: 30));
-
-    _cache.remove(id);
-    _updateCacheTimestamp();
+    await _ensureInitialized();
+    await _box!.delete(id);
+    await _updateCacheTimestamp();
   }
 
   @override
   Future<List<Product>> searchProducts(String query) async {
-    // Simulate local storage search delay
-    await Future.delayed(const Duration(milliseconds: 50));
-
+    await _ensureInitialized();
     final lowerQuery = query.toLowerCase();
-    return _cache.values.where((product) {
+    return _box!.values.where((product) {
       return product.name.toLowerCase().contains(lowerQuery) ||
           product.description.toLowerCase().contains(lowerQuery);
     }).toList();
@@ -80,55 +82,63 @@ class ProductLocalDataSource implements ProductDataSource {
 
   /// Cache all products from a list
   Future<void> cacheProducts(List<Product> products) async {
-    await Future.delayed(const Duration(milliseconds: 60));
-
-    _cache.clear();
+    await _ensureInitialized();
+    await _box!.clear();
     for (final product in products) {
-      _cache[product.id] = product;
+      await _box!.put(product.id, product);
     }
-    _updateCacheTimestamp();
+    await _updateCacheTimestamp();
   }
 
   /// Cache a single product
   Future<void> cacheProduct(Product product) async {
-    await Future.delayed(const Duration(milliseconds: 40));
-
-    _cache[product.id] = product;
-    _updateCacheTimestamp();
+    await _ensureInitialized();
+    await _box!.put(product.id, product);
+    await _updateCacheTimestamp();
   }
 
   /// Check if cache is valid (not expired)
   bool isCacheValid() {
-    if (_cacheTimestamp == null || _cache.isEmpty) {
+    final timestampStr = _metaBox?.get(_timestampKey);
+    if (timestampStr == null || _box == null || _box!.isEmpty) {
       return false;
     }
 
+    final cacheTimestamp = DateTime.parse(timestampStr);
     final now = DateTime.now();
-    final difference = now.difference(_cacheTimestamp!);
+    final difference = now.difference(cacheTimestamp);
 
     return difference < cacheExpiry;
   }
 
   /// Check if cache has data
   bool hasCache() {
-    return _cache.isNotEmpty;
+    return _box != null && _box!.isNotEmpty;
   }
 
   /// Clear all cached data
   Future<void> clearCache() async {
-    await Future.delayed(const Duration(milliseconds: 30));
-
-    _cache.clear();
-    _cacheTimestamp = null;
+    await _ensureInitialized();
+    await _box!.clear();
+    await _metaBox!.delete(_timestampKey);
   }
 
   /// Get cache timestamp
   DateTime? getCacheTimestamp() {
-    return _cacheTimestamp;
+    final timestampStr = _metaBox?.get(_timestampKey);
+    if (timestampStr == null) return null;
+    return DateTime.parse(timestampStr);
   }
 
   /// Update cache timestamp
-  void _updateCacheTimestamp() {
-    _cacheTimestamp = DateTime.now();
+  Future<void> _updateCacheTimestamp() async {
+    await _ensureInitialized();
+    await _metaBox!.put(_timestampKey, DateTime.now().toIso8601String());
+  }
+  
+  /// Close Hive boxes
+  Future<void> close() async {
+    await _box?.close();
+    await _metaBox?.close();
   }
 }

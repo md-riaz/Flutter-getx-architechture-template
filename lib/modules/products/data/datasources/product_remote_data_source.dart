@@ -1,146 +1,140 @@
-import '../../../../core/services/api_client.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/product.dart';
 import 'product_data_source.dart';
 
 /// Remote data source implementation for products
-/// This handles all API calls to the backend server
+/// This handles all API calls to JSONPlaceholder API
 class ProductRemoteDataSource implements ProductDataSource {
-  final ApiClient _apiClient;
+  static const String baseUrl = 'https://jsonplaceholder.typicode.com';
+  final http.Client _client;
 
-  ProductRemoteDataSource(this._apiClient);
+  ProductRemoteDataSource([http.Client? client]) 
+      : _client = client ?? http.Client();
 
   @override
   Future<List<Product>> getProducts() async {
-    // Simulate API call with delay
-    await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/posts'),
+      );
 
-    // In a real app, this would call:
-    // final response = await _apiClient.get('/products');
-    // return (response['data'] as List).map((e) => Product.fromJson(e)).toList();
-
-    // Mock data for demonstration
-    return [
-      Product(
-        id: '1',
-        name: 'Laptop Pro 15',
-        description: 'High-performance laptop for professionals',
-        price: 1299.99,
-        stock: 15,
-        imageUrl: 'https://example.com/laptop.jpg',
-        lastUpdated: DateTime.now(),
-      ),
-      Product(
-        id: '2',
-        name: 'Wireless Mouse',
-        description: 'Ergonomic wireless mouse with long battery life',
-        price: 29.99,
-        stock: 50,
-        imageUrl: 'https://example.com/mouse.jpg',
-        lastUpdated: DateTime.now(),
-      ),
-      Product(
-        id: '3',
-        name: 'Mechanical Keyboard',
-        description: 'RGB mechanical keyboard with blue switches',
-        price: 89.99,
-        stock: 30,
-        imageUrl: 'https://example.com/keyboard.jpg',
-        lastUpdated: DateTime.now(),
-      ),
-      Product(
-        id: '4',
-        name: '4K Monitor',
-        description: '27-inch 4K UHD monitor with HDR support',
-        price: 449.99,
-        stock: 12,
-        imageUrl: 'https://example.com/monitor.jpg',
-        lastUpdated: DateTime.now(),
-      ),
-      Product(
-        id: '5',
-        name: 'USB-C Hub',
-        description: 'Multi-port USB-C hub with HDMI and ethernet',
-        price: 59.99,
-        stock: 40,
-        imageUrl: 'https://example.com/hub.jpg',
-        lastUpdated: DateTime.now(),
-      ),
-    ];
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonList = json.decode(response.body);
+        // Limit to first 20 items for better performance
+        return jsonList.take(20).map((json) => Product.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load products: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to load products: $e');
+    }
   }
 
   @override
   Future<Product> getProductById(String id) async {
-    // Simulate API call with delay
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // In a real app, this would call:
-    // final response = await _apiClient.get('/products/$id');
-    // return Product.fromJson(response['data']);
-
-    // Mock data for demonstration
-    final products = await getProducts();
     try {
-      return products.firstWhere((p) => p.id == id);
+      final response = await _client.get(
+        Uri.parse('$baseUrl/posts/$id'),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return Product.fromJson(jsonData);
+      } else {
+        throw Exception('Product not found with id: $id');
+      }
     } catch (e) {
-      throw Exception('Product not found with id: $id');
+      throw Exception('Failed to load product: $e');
     }
   }
 
   @override
   Future<Product> createProduct(Product product) async {
-    // Simulate API call with delay
-    await Future.delayed(const Duration(milliseconds: 600));
+    try {
+      final response = await _client.post(
+        Uri.parse('$baseUrl/posts'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'title': product.name,
+          'body': product.description,
+          'userId': (product.price / 10).round(),
+        }),
+      );
 
-    // In a real app, this would call:
-    // final response = await _apiClient.post('/products', product.toJson());
-    // return Product.fromJson(response['data']);
-
-    // Return the product with updated timestamp
-    return product.copyWith(
-      lastUpdated: DateTime.now(),
-    );
+      if (response.statusCode == 201) {
+        final jsonData = json.decode(response.body);
+        return Product.fromJson(jsonData).copyWith(
+          lastUpdated: DateTime.now(),
+        );
+      } else {
+        throw Exception('Failed to create product: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to create product: $e');
+    }
   }
 
   @override
   Future<Product> updateProduct(Product product) async {
-    // Simulate API call with delay
-    await Future.delayed(const Duration(milliseconds: 600));
+    try {
+      final response = await _client.put(
+        Uri.parse('$baseUrl/posts/${product.id}'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'id': int.parse(product.id),
+          'title': product.name,
+          'body': product.description,
+          'userId': (product.price / 10).round(),
+        }),
+      );
 
-    // In a real app, this would call:
-    // final response = await _apiClient.put('/products/${product.id}', product.toJson());
-    // return Product.fromJson(response['data']);
-
-    // Return the product with updated timestamp
-    return product.copyWith(
-      lastUpdated: DateTime.now(),
-    );
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return Product.fromJson(jsonData).copyWith(
+          lastUpdated: DateTime.now(),
+        );
+      } else {
+        throw Exception('Failed to update product: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to update product: $e');
+    }
   }
 
   @override
   Future<void> deleteProduct(String id) async {
-    // Simulate API call with delay
-    await Future.delayed(const Duration(milliseconds: 400));
+    try {
+      final response = await _client.delete(
+        Uri.parse('$baseUrl/posts/$id'),
+      );
 
-    // In a real app, this would call:
-    // await _apiClient.delete('/products/$id');
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete product: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to delete product: $e');
+    }
   }
 
   @override
   Future<List<Product>> searchProducts(String query) async {
-    // Simulate API call with delay
-    await Future.delayed(const Duration(milliseconds: 700));
+    // JSONPlaceholder doesn't have search, so we fetch all and filter
+    try {
+      final allProducts = await getProducts();
+      final lowerQuery = query.toLowerCase();
 
-    // In a real app, this would call:
-    // final response = await _apiClient.get('/products/search?q=$query');
-    // return (response['data'] as List).map((e) => Product.fromJson(e)).toList();
-
-    // Mock search implementation
-    final allProducts = await getProducts();
-    final lowerQuery = query.toLowerCase();
-
-    return allProducts.where((product) {
-      return product.name.toLowerCase().contains(lowerQuery) ||
-          product.description.toLowerCase().contains(lowerQuery);
-    }).toList();
+      return allProducts.where((product) {
+        return product.name.toLowerCase().contains(lowerQuery) ||
+            product.description.toLowerCase().contains(lowerQuery);
+      }).toList();
+    } catch (e) {
+      throw Exception('Failed to search products: $e');
+    }
+  }
+  
+  /// Dispose the HTTP client
+  void dispose() {
+    _client.close();
   }
 }

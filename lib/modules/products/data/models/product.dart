@@ -1,11 +1,29 @@
+import 'package:hive/hive.dart';
+
+part 'product.g.dart';
+
 /// Product model representing a product entity
-class Product {
+@HiveType(typeId: 0)
+class Product extends HiveObject {
+  @HiveField(0)
   final String id;
+  
+  @HiveField(1)
   final String name;
+  
+  @HiveField(2)
   final String description;
+  
+  @HiveField(3)
   final double price;
+  
+  @HiveField(4)
   final int stock;
+  
+  @HiveField(5)
   final String? imageUrl;
+  
+  @HiveField(6)
   final DateTime? lastUpdated;
 
   Product({
@@ -18,18 +36,16 @@ class Product {
     this.lastUpdated,
   });
 
-  /// Create Product from JSON
+  /// Create Product from JSON (for API responses)
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      price: (json['price'] as num).toDouble(),
-      stock: json['stock'] as int,
-      imageUrl: json['image_url'] as String?,
-      lastUpdated: json['last_updated'] != null
-          ? DateTime.parse(json['last_updated'] as String)
-          : null,
+      id: json['id'].toString(),
+      name: json['title'] as String,
+      description: json['body'] as String,
+      price: (json['userId'] as num).toDouble() * 10, // Mock price based on userId
+      stock: 100 - (json['id'] as num).toInt(), // Mock stock
+      imageUrl: 'https://via.placeholder.com/150',
+      lastUpdated: DateTime.now(),
     );
   }
 
