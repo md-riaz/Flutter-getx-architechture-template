@@ -1,6 +1,6 @@
 # Products Module - Repository Pattern Example
 
-This module demonstrates the **Repository Pattern** with separate **Local** and **Remote Data Sources**, which is a common architecture pattern in Flutter applications.
+This module demonstrates the **Repository Pattern** with separate **Local** and **Remote Data Sources**, including **Infinite Scroll Pagination** for efficient list handling, which is a common architecture pattern in Flutter applications.
 
 ## Architecture Overview
 
@@ -52,6 +52,7 @@ This module demonstrates the **Repository Pattern** with separate **Local** and 
 
 **API Endpoints Used:**
 - `GET /posts` → `getProducts()` - Fetch all products from API (limited to 20)
+- `GET /posts?_page=X&_limit=Y` → `getProductsPaginated()` - Fetch paginated products
 - `GET /posts/:id` → `getProductById(id)` - Fetch a single product
 - `POST /posts` → `createProduct(product)` - Create new product on server
 - `PUT /posts/:id` → `updateProduct(product)` - Update existing product
@@ -91,6 +92,7 @@ remoteDataSource.configureInterceptors(
 - Cache management methods
 - Persistent storage using Hive boxes
 - Type-safe serialization with generated adapters
+- Pagination support for in-memory data
 
 ### 2. Repository
 
@@ -137,6 +139,110 @@ Future<Product> createProduct(Product product) async {
   return createdProduct;
 }
 ```
+
+### Pagination Strategy
+
+```dart
+// Pagination always fetches from remote for consistency
+Future<List<Product>> getProductsPaginated({
+  required int pageKey,
+  int pageSize = 20,
+}) async {
+  return await _remoteDataSource.getProductsPaginated(
+    pageKey: pageKey,
+    pageSize: pageSize,
+  );
+}
+```
+
+**Why not use cache for pagination?**
+- Page boundaries must be consistent
+- Ensures all users see the same page content
+- Avoids partial page data from cache
+- Cache is better suited for full dataset access
+
+## Infinite Scroll Pagination
+
+This module includes a complete example of infinite scroll pagination using the `infinite_scroll_pagination` package.
+
+### Features
+
+✅ **Automatic Loading** - Loads next page as user scrolls  
+✅ **Pull-to-Refresh** - Swipe down to refresh the list  
+✅ **Error Handling** - Shows error message with retry button  
+✅ **Empty States** - Displays message when no items found  
+✅ **Loading Indicators** - Shows spinner for first page and subsequent pages  
+✅ **Memory Efficient** - Only keeps visible items in memory  
+
+### Controller Setup
+
+```dart
+class ProductsController extends GetxController {
+  final PagingController<int, Product> pagingController = 
+      PagingController(firstPageKey: 1);
+
+  @override
+  void onInit() {
+    super.onInit();
+    pagingController.addPageRequestListener((pageKey) {
+      _fetchPage(pageKey);
+    });
+  }
+
+  Future<void> _fetchPage(int pageKey) async {
+    try {
+      final newItems = await repository.getProductsPaginated(
+        pageKey: pageKey,
+        pageSize: 20,
+      );
+
+      final isLastPage = newItems.length < 20;
+      if (isLastPage) {
+        pagingController.appendLastPage(newItems);
+      } else {
+        pagingController.appendPage(newItems, pageKey + 1);
+      }
+    } catch (error) {
+      pagingController.error = error;
+    }
+  }
+}
+```
+
+### View Implementation
+
+```dart
+PagedListView<int, Product>(
+  pagingController: controller.pagingController,
+  builderDelegate: PagedChildBuilderDelegate<Product>(
+    itemBuilder: (context, product, index) => ProductListItem(
+      product: product,
+      onTap: () => _showProductDetails(product),
+    ),
+    firstPageErrorIndicatorBuilder: (context) => ErrorIndicator(
+      error: controller.pagingController.error,
+      onTryAgain: controller.pagingController.refresh,
+    ),
+    noItemsFoundIndicatorBuilder: (context) => EmptyListIndicator(),
+    firstPageProgressIndicatorBuilder: (context) => 
+        Center(child: CircularProgressIndicator()),
+    newPageProgressIndicatorBuilder: (context) => 
+        Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+  ),
+)
+```
+
+### Benefits of Infinite Scroll Pagination
+
+1. **Better Performance** - Only loads and renders visible items
+2. **Reduced Memory Usage** - Doesn't load entire dataset at once
+3. **Network Efficiency** - Fetches data in chunks as needed
+4. **Improved UX** - Smooth scrolling without pagination buttons
+5. **Automatic Error Recovery** - Built-in retry mechanism
+6. **Flexible** - Works with any data source (API, database, etc.)
 
 ## Usage Examples
 

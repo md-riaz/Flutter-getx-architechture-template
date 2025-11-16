@@ -16,10 +16,14 @@ Located in `lib/modules/products/`, this module demonstrates a production-ready 
 **Structure:**
 ```
 lib/modules/products/
+├── controllers/
+│   └── products_controller.dart              # Controller with pagination
+├── views/
+│   └── products_view.dart                     # View with infinite scroll
 ├── data/
 │   ├── datasources/
 │   │   ├── product_data_source.dart          # Interface/Contract
-│   │   ├── product_remote_data_source.dart   # API calls
+│   │   ├── product_remote_data_source.dart   # API calls with pagination
 │   │   └── product_local_data_source.dart    # Local caching
 │   ├── models/
 │   │   └── product.dart                       # Product model
