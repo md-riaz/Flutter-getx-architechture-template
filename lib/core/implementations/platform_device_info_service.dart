@@ -1,22 +1,24 @@
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/widgets.dart';
 import '../interfaces/device_info_interface.dart';
+import 'platform_device_info_service_stub.dart'
+    if (dart.library.io) 'platform_device_info_service_io.dart'
+    if (dart.library.html) 'platform_device_info_service_web.dart';
 
 /// Platform-based implementation of IDeviceInfoService
-/// Uses Flutter's Platform and kIsWeb to determine device information
+/// Uses conditional imports to support both native and web platforms
 /// Can be replaced with device_info_plus or other packages for more detailed info
 class PlatformDeviceInfoService implements IDeviceInfoService {
+  final PlatformInfo _platform = getPlatformInfo();
+
   @override
   Future<String> getOperatingSystem() async {
-    if (kIsWeb) return 'Web';
-    return Platform.operatingSystem;
+    return _platform.operatingSystem;
   }
 
   @override
   Future<String> getOSVersion() async {
-    if (kIsWeb) return 'N/A';
-    return Platform.operatingSystemVersion;
+    return _platform.operatingSystemVersion;
   }
 
   @override
@@ -33,14 +35,12 @@ class PlatformDeviceInfoService implements IDeviceInfoService {
 
   @override
   Future<bool> isAndroid() async {
-    if (kIsWeb) return false;
-    return Platform.isAndroid;
+    return _platform.isAndroid;
   }
 
   @override
   Future<bool> isIOS() async {
-    if (kIsWeb) return false;
-    return Platform.isIOS;
+    return _platform.isIOS;
   }
 
   @override
@@ -50,14 +50,12 @@ class PlatformDeviceInfoService implements IDeviceInfoService {
 
   @override
   Future<bool> isDesktop() async {
-    if (kIsWeb) return false;
-    return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+    return _platform.isDesktop;
   }
 
   @override
   Future<bool> isMobile() async {
-    if (kIsWeb) return false;
-    return Platform.isAndroid || Platform.isIOS;
+    return _platform.isMobile;
   }
 
   @override
