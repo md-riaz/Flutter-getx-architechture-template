@@ -86,16 +86,18 @@ abstract class ProductDataSource {
 ```
 
 ### 2. Remote Data Source
-Handles all API communication:
-- Simulates network latency (~800ms)
-- Would integrate with real API using `http`, `dio`, etc.
+Handles all API communication with **JSONPlaceholder API**:
+- Uses `http` package for real REST API calls
+- Connects to https://jsonplaceholder.typicode.com
 - Returns fresh data from the server
+- Proper error handling for network failures
 
 ### 3. Local Data Source
-Manages local caching:
-- Fast access (~50ms vs 800ms remote)
+Manages local caching with **Hive**:
+- Fast NoSQL database with optimized storage
+- Persistent storage that survives app restarts
 - Cache validation with expiry time (5 minutes default)
-- Uses in-memory cache (can be replaced with Hive, SQLite, etc.)
+- Type-safe serialization with generated adapters
 
 ### 4. Repository
 Orchestrates between local and remote:
@@ -118,22 +120,33 @@ Orchestrates between local and remote:
 ### Basic Repository Usage
 
 ```dart
+// Initialize Hive (in main.dart)
+await Hive.initFlutter();
+Hive.registerAdapter(ProductAdapter());
+
+// Create and initialize local data source
+final localDataSource = ProductLocalDataSource();
+await localDataSource.init();
+
+// Create remote data source (uses JSONPlaceholder API)
+final remoteDataSource = ProductRemoteDataSource();
+
 // Create repository with both data sources
 final repository = ProductRepository(
-  ProductRemoteDataSource(apiClient),
-  ProductLocalDataSource(),
+  remoteDataSource,
+  localDataSource,
 );
 
-// Get products (uses cache if valid)
+// Get products (uses Hive cache if valid)
 final products = await repository.getProducts();
 
-// Force refresh from server
+// Force refresh from JSONPlaceholder API
 final freshProducts = await repository.getProducts(forceRefresh: true);
 
 // Get single product
 final product = await repository.getProductById('1');
 
-// Search products
+// Search products (local or remote based on cache)
 final results = await repository.searchProducts('laptop');
 ```
 

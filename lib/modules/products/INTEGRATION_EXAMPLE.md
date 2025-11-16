@@ -8,23 +8,32 @@ Create `lib/modules/products/bindings/products_bindings.dart`:
 
 ```dart
 import 'package:get/get.dart';
-import '../../../core/services/api_client.dart';
+import 'package:hive/hive.dart';
 import '../controllers/products_controller.dart';
 import '../data/datasources/product_local_data_source.dart';
 import '../data/datasources/product_remote_data_source.dart';
+import '../data/models/product.dart';
 import '../data/repositories/product_repository.dart';
 
 class ProductsBindings extends Bindings {
   @override
-  void dependencies() {
-    // Register data sources
-    Get.lazyPut<ProductRemoteDataSource>(
-      () => ProductRemoteDataSource(Get.find<ApiClient>()),
+  void dependencies() async {
+    // Register Hive adapter (if not already registered in main.dart)
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(ProductAdapter());
+    }
+    
+    // Initialize and register local data source
+    final localDataSource = ProductLocalDataSource();
+    await localDataSource.init();
+    Get.put<ProductLocalDataSource>(
+      localDataSource,
       tag: 'session', // Session-level, will be disposed on logout
     );
     
-    Get.lazyPut<ProductLocalDataSource>(
-      () => ProductLocalDataSource(),
+    // Register remote data source (uses JSONPlaceholder API)
+    Get.lazyPut<ProductRemoteDataSource>(
+      () => ProductRemoteDataSource(),
       tag: 'session',
     );
     
@@ -42,6 +51,20 @@ class ProductsBindings extends Bindings {
       () => ProductsController(Get.find<ProductRepository>()),
     );
   }
+}
+```
+
+**Note:** Make sure to initialize Hive in your `main.dart`:
+
+```dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Hive
+  await Hive.initFlutter();
+  Hive.registerAdapter(ProductAdapter());
+  
+  runApp(MyApp());
 }
 ```
 
