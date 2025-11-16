@@ -14,6 +14,7 @@ A starter template for building **feature-first, modular Flutter apps** using **
   - Feature-based folder structure (`modules/`)
   - Core layer for bindings, routes, services (`core/`)
   - Repository + DTO + Model pattern
+  - **Repository pattern with local & remote data sources** ([see products example](lib/modules/products/README.md))
   - Reactive UI with GetX (`Obx`, `GetView`)
 - **UI & Navigation**
   - Example feature: `inventory`
@@ -66,6 +67,7 @@ The app will:
 
 **📖 Documentation:**
 - [AUTH_ARCHITECTURE.md](AUTH_ARCHITECTURE.md) - Authentication & 3-level bindings architecture
+- [REPOSITORY_PATTERN_GUIDE.md](REPOSITORY_PATTERN_GUIDE.md) - Repository pattern with local & remote data sources
 - [FEATURES.md](FEATURES.md) - Complete features overview and quick reference
 - [USAGE_GUIDE.md](USAGE_GUIDE.md) - Detailed usage guide with code examples
 - [RESPONSIVE_DESIGN.md](RESPONSIVE_DESIGN.md) - Responsive design patterns and best practices
@@ -77,9 +79,10 @@ The app will:
 - **modules/splash/** – splash screen with session validation
 - **modules/login/** – login screen with authentication
 - **modules/dashboard/** – dynamic composable dashboard
-- **modules/inventory/** – example feature module with repository pattern
+- **modules/inventory/** – example feature module with basic repository pattern
+- **modules/products/** – **[complete example](lib/modules/products/README.md)** demonstrating repository pattern with local & remote data sources
 
-You can add new modules by copying the structure of `inventory/` and wiring them into `AppPages`, `SessionBindings` and the `DashboardController`.
+You can add new modules by copying the structure of `inventory/` or `products/` and wiring them into `AppPages`, `SessionBindings` and the `DashboardController`.
 
 ## Repository Structure
 
@@ -280,6 +283,40 @@ Obx(() {
   // ... rest of the UI
 })
 ```
+
+### Repository Pattern with Local & Remote Data Sources
+
+This template includes a comprehensive example of the repository pattern with separate local and remote data sources. See the **[Products Module](lib/modules/products/README.md)** for a complete, production-ready implementation.
+
+**Key Features:**
+- **Separation of Concerns**: Remote API calls and local caching are handled separately
+- **Smart Caching**: Automatic cache validation with expiry time
+- **Unified API**: Single repository interface for the rest of the application
+- **Performance**: Fast local access (50ms) vs slower remote (800ms)
+- **Offline Support**: Return cached data when network is unavailable
+
+**Architecture:**
+```
+Repository
+  ├── Remote Data Source (API calls)
+  └── Local Data Source (Caching)
+```
+
+**Example Usage:**
+```dart
+final repository = ProductRepository(
+  ProductRemoteDataSource(apiClient),
+  ProductLocalDataSource(),
+);
+
+// Uses cache if valid, otherwise fetches from remote
+final products = await repository.getProducts();
+
+// Force refresh from remote
+final fresh = await repository.getProducts(forceRefresh: true);
+```
+
+For detailed documentation and examples, see [lib/modules/products/README.md](lib/modules/products/README.md).
 
 ### Authentication Flow
 ```
