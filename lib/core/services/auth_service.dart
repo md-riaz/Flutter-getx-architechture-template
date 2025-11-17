@@ -52,6 +52,13 @@ class AuthService extends GetxService {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       print("AuthService: Frame complete. Deleting all session dependencies.");
       _sessionManager.clearSession();
+      
+      // Show logout success snackbar after frame is complete
+      Get.snackbar(
+        'Success',
+        'Logout successful',
+        snackPosition: SnackPosition.BOTTOM,
+      );
     });
 
     // Clear user state immediately
