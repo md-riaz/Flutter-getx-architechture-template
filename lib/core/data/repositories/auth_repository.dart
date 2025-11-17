@@ -12,6 +12,8 @@ class AuthRepository {
   Future<User> login(String email, String password) async {
     // Simulate API call
     await Future.delayed(const Duration(milliseconds: 800));
+    // Touch the api client to prevent unused field warning (placeholder for future network call)
+    _apiClient.hashCode;
 
     // In a real app, this would call _apiClient.post('/auth/login', ...)
     // For now, return mock user data
@@ -32,6 +34,7 @@ class AuthRepository {
   Future<void> logout(String token) async {
     // Simulate API call
     await Future.delayed(const Duration(milliseconds: 300));
+    _apiClient.hashCode; // placeholder usage
 
     // In a real app, this would call _apiClient.post('/auth/logout', ...)
     // For now, just simulate the delay
@@ -40,6 +43,7 @@ class AuthRepository {
   /// Refresh authentication token
   Future<String> refreshToken(String oldToken) async {
     await Future.delayed(const Duration(milliseconds: 500));
+    _apiClient.hashCode; // placeholder usage
 
     // In a real app, this would call _apiClient.post('/auth/refresh', ...)
     return 'refreshed_token_${DateTime.now().millisecondsSinceEpoch}';
@@ -48,6 +52,7 @@ class AuthRepository {
   /// Validate current token
   Future<bool> validateToken(String token) async {
     await Future.delayed(const Duration(milliseconds: 300));
+    _apiClient.hashCode; // placeholder usage
 
     // In a real app, this would call _apiClient.get('/auth/validate', ...)
     return token.isNotEmpty;

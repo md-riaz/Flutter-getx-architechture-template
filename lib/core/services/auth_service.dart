@@ -1,9 +1,10 @@
-import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+
 import '../data/models/user_model.dart';
 import '../data/repositories/auth_repository.dart';
-import './session_manager.dart';
 import '../routes/app_routes.dart';
+import './session_manager.dart';
 
 class AuthService extends GetxService {
   final AuthRepository _authRepository;
@@ -25,10 +26,10 @@ class AuthService extends GetxService {
       _isLoading.value = true;
       final user = await _authRepository.login(email, password);
       _currentUser.value = user;
-      
+
       return true;
     } catch (e) {
-      print('Login error: $e');
+      debugPrint('AuthService.login error: $e');
       return false;
     } finally {
       _isLoading.value = false;
@@ -37,12 +38,12 @@ class AuthService extends GetxService {
 
   /// Logout and cleanup session
   void logout() {
-    print("AuthService: Logout initiated.");
+    debugPrint("AuthService: Logout initiated.");
 
     // Call the logout API in background (don't await)
     if (_currentUser.value?.token != null) {
       _authRepository.logout(_currentUser.value!.token).catchError((e) {
-        print('Logout API error: $e');
+        debugPrint('AuthService.logout API error: $e');
       });
     }
 
@@ -50,9 +51,10 @@ class AuthService extends GetxService {
     // This ensures the navigation has started and the old view is being disposed,
     // preventing it from trying to access a deleted controller.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print("AuthService: Frame complete. Deleting all session dependencies.");
+      debugPrint(
+          "AuthService: Frame complete. Deleting all session dependencies.");
       _sessionManager.clearSession();
-      
+
       // Show logout success snackbar after frame is complete
       Get.snackbar(
         'Success',
@@ -72,11 +74,11 @@ class AuthService extends GetxService {
   /// Validate current session
   Future<bool> validateSession() async {
     if (_currentUser.value?.token == null) return false;
-    
+
     try {
       return await _authRepository.validateToken(_currentUser.value!.token);
     } catch (e) {
-      print('Session validation error: $e');
+      debugPrint('AuthService.validateSession error: $e');
       return false;
     }
   }

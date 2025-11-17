@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/login_controller.dart';
+
 import '../../../core/widgets/responsive_builder.dart';
+import '../controllers/login_controller.dart';
 
 class LoginView extends GetView<LoginController> {
   const LoginView({super.key});
@@ -36,7 +37,7 @@ class LoginView extends GetView<LoginController> {
                         const SizedBox(height: 16),
                         _buildPasswordField(),
                         const SizedBox(height: 8),
-                        _buildErrorMessage(),
+                        _buildErrorMessage(context),
                         const SizedBox(height: 24),
                         _buildLoginButton(),
                         const SizedBox(height: 16),
@@ -116,7 +117,7 @@ class LoginView extends GetView<LoginController> {
         ));
   }
 
-  Widget _buildErrorMessage() {
+  Widget _buildErrorMessage(BuildContext context) {
     return Obx(() {
       if (controller.errorMessage.value.isEmpty) {
         return const SizedBox.shrink();
@@ -124,10 +125,17 @@ class LoginView extends GetView<LoginController> {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+          // withOpacity deprecated; use withValues alpha 0.1
+          color: Theme.of(context)
+              .colorScheme
+              .error
+              .withValues(alpha: (0.1 * 255)),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: Theme.of(context).colorScheme.error.withOpacity(0.5),
+            color: Theme.of(context)
+                .colorScheme
+                .error
+                .withValues(alpha: (0.5 * 255)),
           ),
         ),
         child: Row(
@@ -175,7 +183,10 @@ class LoginView extends GetView<LoginController> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+        color: Theme.of(context)
+            .colorScheme
+            .primaryContainer
+            .withValues(alpha: (0.3 * 255)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

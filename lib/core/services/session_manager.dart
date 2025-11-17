@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 /// SessionManager handles lifecycle of session-level bindings
@@ -5,23 +6,42 @@ import 'package:get/get.dart';
 class SessionManager extends GetxService {
   static const String sessionTag = 'session';
 
+  // Track all types registered with session tag
+  final Set<Type> _sessionTypes = {};
+
+  /// Register a type as session-scoped
+  void registerSessionType<T>() {
+    _sessionTypes.add(T);
+  }
+
   /// Clear all session-level bindings
   void clearSession() {
-    print("SessionManager: Clearing all session-level dependencies.");
-    // Delete all dependencies registered with session tag
-    Get.deleteAll(tag: sessionTag, force: true);
+    debugPrint("SessionManager: Clearing all session-level dependencies.");
+
+    // Delete all tracked session types with the session tag
+    for (final type in _sessionTypes) {
+      try {
+        Get.delete(tag: sessionTag);
+      } catch (e) {
+        debugPrint("SessionManager: Error deleting $type: $e");
+      }
+    }
+
+    _sessionTypes.clear();
   }
 
   /// Check if session is active by checking if session-tagged controllers exist
   bool get hasActiveSession {
-    // You can check for any session-tagged dependency
-    // For now, we'll check if anything is registered with the session tag
-    try {
-      Get.find(tag: sessionTag);
-      return true;
-    } catch (e) {
-      return false;
+    // Check if any session-tagged dependency exists
+    for (final _ in _sessionTypes) {
+      try {
+        Get.find(tag: sessionTag);
+        return true;
+      } catch (e) {
+        // Continue checking other types
+      }
     }
+    return false;
   }
 
   /// Get the current session tag
