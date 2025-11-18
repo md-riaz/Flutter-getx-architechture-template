@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../controllers/inventory_controller.dart';
 
 class InventorySummaryCard extends GetView<InventoryController> {
   const InventorySummaryCard({super.key});
 
+  static const String sessionTag = 'session';
+
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<InventoryController>(tag: sessionTag);
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
@@ -17,7 +21,8 @@ class InventorySummaryCard extends GetView<InventoryController> {
           }
 
           final totalItems = controller.items.length;
-          final lowStock = controller.items.where((e) => e.quantity < 10).length;
+          final lowStock =
+              controller.items.where((e) => e.quantity < 10).length;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,

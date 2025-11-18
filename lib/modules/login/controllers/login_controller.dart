@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/services/auth_service.dart';
-import '../../../core/routes/app_routes.dart';
+
 import '../../../core/bindings/session_bindings.dart';
+import '../../../core/routes/app_routes.dart';
+import '../../../core/services/auth_service.dart';
 
 class LoginController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
@@ -49,8 +50,12 @@ class LoginController extends GetxController {
       final user = _authService.currentUser;
       if (user != null) {
         SessionBindings(user: user).dependencies();
+        // Also call SessionManagerBindings for additional session features
+        // (if you want to use the new SessionManagerBindings class)
+        // import the correct path if needed
+        // import '../../modules/session/session_manager_bindings.dart';
+        // SessionManagerBindings(auth: _authService).dependencies();
       }
-      
       // Navigate to dashboard
       Get.offAllNamed(Routes.dashboard);
     } else {
@@ -59,4 +64,5 @@ class LoginController extends GetxController {
   }
 
   bool get isLoading => _authService.isLoading;
+  // ...existing code...
 }

@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+
 import '../../../core/services/api_client.dart';
 import '../controllers/inventory_controller.dart';
 import '../data/repositories/inventory_repository.dart';
@@ -9,16 +10,16 @@ class InventoryBindings extends Bindings {
 
   @override
   void dependencies() {
-    Get.lazyPut<InventoryRepository>(
-      () => InventoryRepository(Get.find<ApiClient>()),
+    Get.put<InventoryRepository>(
+      InventoryRepository(Get.find<ApiClient>()),
       tag: sessionTag,
     );
-    Get.lazyPut<InventoryService>(
-      () => InventoryService(Get.find<InventoryRepository>(tag: sessionTag)),
+    Get.put<InventoryService>(
+      InventoryService(Get.find<InventoryRepository>(tag: sessionTag)),
       tag: sessionTag,
     );
-    Get.lazyPut<InventoryController>(
-      () => InventoryController(Get.find<InventoryService>(tag: sessionTag)),
+    Get.put<InventoryController>(
+      InventoryController(Get.find<InventoryService>(tag: sessionTag)),
       tag: sessionTag,
     );
   }
