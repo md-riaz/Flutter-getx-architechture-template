@@ -42,7 +42,7 @@ void main() {
       expect(authService.isLoggedIn, isTrue);
       expect(authService.permissions?.inventoryAccess, isTrue);
 
-      authService.logout(); // Now synchronous
+      await authService.logout();
 
       expect(authService.isLoggedIn, isFalse);
     });

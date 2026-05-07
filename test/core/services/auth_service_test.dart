@@ -54,7 +54,7 @@ void main() {
       await authService.login('test@example.com', 'password');
       expect(authService.isLoggedIn, isTrue);
 
-      authService.logout();
+      await authService.logout();
 
       expect(authService.isLoggedIn, isFalse);
       expect(authService.currentUser, isNull);
@@ -144,10 +144,8 @@ void main() {
       await authService.login('test@example.com', 'password');
       expect(await storage.getString('auth_token'), isNotNull);
 
-      authService.logout();
+      await authService.logout();
 
-      // Give the logout time to clear storage (it is async but not awaited)
-      await Future.delayed(const Duration(milliseconds: 50));
       expect(await storage.getString('auth_token'), isNull);
     });
   });

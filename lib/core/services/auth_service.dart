@@ -90,7 +90,7 @@ class AuthService extends GetxService {
   }
 
   /// Logout and cleanup session
-  void logout() {
+  Future<void> logout() async {
     debugPrint("AuthService: Logout initiated.");
 
     // Call the logout API in background (don't await)
@@ -100,9 +100,13 @@ class AuthService extends GetxService {
       });
     }
 
-    // Schedule the deletion to happen after the current frame.
-    // This ensures the navigation has started and the old view is being disposed,
-    // preventing it from trying to access a deleted controller.
+    // Clear user state and persisted token before navigating so that no
+    // concurrent code (e.g. a splash restore) can read a stale token.
+    _currentUser.value = null;
+    await _clearPersistedSession();
+
+    // Schedule session-controller deletion after the current frame so that the
+    // old view is disposed before its controllers are deleted.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       debugPrint(
           "AuthService: Frame complete. Deleting all session dependencies.");
@@ -116,12 +120,7 @@ class AuthService extends GetxService {
       );
     });
 
-    // Clear user state and persisted token immediately
-    _currentUser.value = null;
-    _clearPersistedSession();
-
     // Navigate away immediately. This is the most important step.
-    // Get.offAllNamed will pop the current view and start the transition.
     Get.offAllNamed(Routes.login);
   }
 
