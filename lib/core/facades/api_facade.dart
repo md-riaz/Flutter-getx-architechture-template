@@ -1,5 +1,6 @@
 import '../http/api_client.dart';
 import '../http/api_response.dart';
+import '../http/request_options.dart';
 import '../service_locator/service_locator.dart';
 
 /// Api Facade — Laravel-style static access to the shared HTTP client.
@@ -84,4 +85,117 @@ class Api {
         queryParameters: queryParameters,
         headers: headers,
       );
+
+  static _ApiRequestBuilder withToken(String token) {
+    return _ApiRequestBuilder(
+      _client,
+      const ApiRequestOptions().copyWith(token: token),
+    );
+  }
+
+  static _ApiRequestBuilder retry(int count) {
+    return _ApiRequestBuilder(
+      _client,
+      const ApiRequestOptions().copyWith(retryCount: count),
+    );
+  }
+
+  static _ApiRequestBuilder timeout(Duration duration) {
+    return _ApiRequestBuilder(
+      _client,
+      const ApiRequestOptions().copyWith(timeout: duration),
+    );
+  }
+}
+
+class _ApiRequestBuilder {
+  final DioApiClient _client;
+  final ApiRequestOptions _options;
+
+  const _ApiRequestBuilder(this._client, this._options);
+
+  _ApiRequestBuilder withToken(String token) {
+    return _ApiRequestBuilder(_client, _options.copyWith(token: token));
+  }
+
+  _ApiRequestBuilder retry(int count) {
+    return _ApiRequestBuilder(_client, _options.copyWith(retryCount: count));
+  }
+
+  _ApiRequestBuilder timeout(Duration duration) {
+    return _ApiRequestBuilder(_client, _options.copyWith(timeout: duration));
+  }
+
+  Future<ApiResponse<T>> get<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Map<String, dynamic>? headers,
+  }) {
+    return _client.get<T>(
+      path,
+      queryParameters: queryParameters,
+      headers: headers,
+      requestOptions: _options,
+    );
+  }
+
+  Future<ApiResponse<T>> post<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Map<String, dynamic>? headers,
+  }) {
+    return _client.post<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      headers: headers,
+      requestOptions: _options,
+    );
+  }
+
+  Future<ApiResponse<T>> put<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Map<String, dynamic>? headers,
+  }) {
+    return _client.put<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      headers: headers,
+      requestOptions: _options,
+    );
+  }
+
+  Future<ApiResponse<T>> patch<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Map<String, dynamic>? headers,
+  }) {
+    return _client.patch<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      headers: headers,
+      requestOptions: _options,
+    );
+  }
+
+  Future<ApiResponse<T>> delete<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Map<String, dynamic>? headers,
+  }) {
+    return _client.delete<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      headers: headers,
+      requestOptions: _options,
+    );
+  }
 }

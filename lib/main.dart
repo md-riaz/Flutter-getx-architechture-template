@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'core/bootstrap/app_bootstrap.dart';
 import 'core/bindings/app_bindings.dart';
 import 'core/routes/app_pages.dart';
 import 'core/routes/app_routes.dart';
-import 'core/service_locator/service_locator.dart';
 import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Boot the service locator so all facades (Storage, Log, Api, etc.) are
-  // available before the widget tree is built.
-  await setupServiceLocator();
+  await AppBootstrap.boot();
 
   runApp(const ModularGetXApp());
 }

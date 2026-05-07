@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
 import 'api_exception.dart';
 import 'api_response.dart';
+import 'request_options.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/error_interceptor.dart';
 import 'interceptors/logging_interceptor.dart';
+import 'interceptors/retry_interceptor.dart';
 
 /// Shared Dio-based HTTP client used by all modules.
 ///
@@ -44,6 +46,7 @@ class DioApiClient {
       if (tokenProvider != null)
         AuthInterceptor(tokenProvider: tokenProvider),
       LoggingInterceptor(),
+      RetryInterceptor(dio: dio),
       ErrorInterceptor(),
     ]);
   }
@@ -56,12 +59,13 @@ class DioApiClient {
     String path, {
     Map<String, dynamic>? queryParameters,
     Map<String, dynamic>? headers,
+    ApiRequestOptions? requestOptions,
   }) =>
       _request<T>(
         () => dio.get<T>(
           path,
           queryParameters: queryParameters,
-          options: headers != null ? Options(headers: headers) : null,
+          options: _resolveOptions(headers, requestOptions),
         ),
       );
 
@@ -70,13 +74,14 @@ class DioApiClient {
     dynamic data,
     Map<String, dynamic>? queryParameters,
     Map<String, dynamic>? headers,
+    ApiRequestOptions? requestOptions,
   }) =>
       _request<T>(
         () => dio.post<T>(
           path,
           data: data,
           queryParameters: queryParameters,
-          options: headers != null ? Options(headers: headers) : null,
+          options: _resolveOptions(headers, requestOptions),
         ),
       );
 
@@ -85,13 +90,14 @@ class DioApiClient {
     dynamic data,
     Map<String, dynamic>? queryParameters,
     Map<String, dynamic>? headers,
+    ApiRequestOptions? requestOptions,
   }) =>
       _request<T>(
         () => dio.put<T>(
           path,
           data: data,
           queryParameters: queryParameters,
-          options: headers != null ? Options(headers: headers) : null,
+          options: _resolveOptions(headers, requestOptions),
         ),
       );
 
@@ -100,13 +106,14 @@ class DioApiClient {
     dynamic data,
     Map<String, dynamic>? queryParameters,
     Map<String, dynamic>? headers,
+    ApiRequestOptions? requestOptions,
   }) =>
       _request<T>(
         () => dio.patch<T>(
           path,
           data: data,
           queryParameters: queryParameters,
-          options: headers != null ? Options(headers: headers) : null,
+          options: _resolveOptions(headers, requestOptions),
         ),
       );
 
@@ -115,19 +122,48 @@ class DioApiClient {
     dynamic data,
     Map<String, dynamic>? queryParameters,
     Map<String, dynamic>? headers,
+    ApiRequestOptions? requestOptions,
   }) =>
       _request<T>(
         () => dio.delete<T>(
           path,
           data: data,
           queryParameters: queryParameters,
-          options: headers != null ? Options(headers: headers) : null,
+          options: _resolveOptions(headers, requestOptions),
         ),
       );
 
   // ──────────────────────────────────────────────
   // Internal helpers
   // ──────────────────────────────────────────────
+
+  Options? _resolveOptions(
+    Map<String, dynamic>? headers,
+    ApiRequestOptions? requestOptions,
+  ) {
+    final mergedHeaders = <String, dynamic>{
+      ...?requestOptions?.headers,
+      ...?headers,
+    };
+
+    if (requestOptions?.token != null && requestOptions!.token!.isNotEmpty) {
+      mergedHeaders['Authorization'] = '******';
+    }
+
+    if (mergedHeaders.isEmpty &&
+        requestOptions == null) {
+      return null;
+    }
+
+    return Options(
+      headers: mergedHeaders.isEmpty ? null : mergedHeaders,
+      receiveTimeout: requestOptions?.timeout,
+      sendTimeout: requestOptions?.timeout,
+      extra: {
+        'retries': requestOptions?.retryCount ?? 0,
+      },
+    );
+  }
 
   Future<ApiResponse<T>> _request<T>(
     Future<Response<T>> Function() call,
