@@ -19,10 +19,11 @@ class SessionBindings extends Bindings {
     debugPrint(
         "SessionBindings: Initializing features based on user permissions.");
 
-    // Get the session manager to track session dependencies
     final sessionManager = Get.find<SessionManager>();
 
-    // Initialize feature services first based on user permissions
+    // Initialize feature services first based on user permissions.
+    // Each feature Bindings class registers its own cleanup callbacks with
+    // the SessionManager, so no additional registration is needed here.
     if (user.permissions.inventoryAccess) {
       InventoryBindings().dependencies();
     }
@@ -34,7 +35,12 @@ class SessionBindings extends Bindings {
 
     // Finally, initialize the dashboard controller which will use these services.
     // It's tagged with 'session' so it's disposed on logout.
-    Get.put(DashboardController(), tag: 'session');
-    sessionManager.registerSessionType<DashboardController>();
+    Get.put(DashboardController(), tag: SessionManager.sessionTag);
+    sessionManager.registerCleanup(
+      () => Get.delete<DashboardController>(
+        tag: SessionManager.sessionTag,
+        force: true,
+      ),
+    );
   }
 }

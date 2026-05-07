@@ -1,49 +1,48 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
-/// SessionManager handles lifecycle of session-level bindings
-/// Session-level bindings are created after login and disposed on logout
+/// SessionManager handles the lifecycle of session-level bindings.
+/// Session-level dependencies are created after login and disposed on logout.
+///
+/// Register cleanup callbacks via [registerCleanup] when putting session-scoped
+/// dependencies. [clearSession] runs every registered callback in order and
+/// then resets the list.
+///
+/// Example:
+/// ```dart
+/// Get.put(MyController(), tag: SessionManager.sessionTag);
+/// sessionManager.registerCleanup(
+///   () => Get.delete<MyController>(tag: SessionManager.sessionTag, force: true),
+/// );
+/// ```
 class SessionManager extends GetxService {
   static const String sessionTag = 'session';
 
-  // Track all types registered with session tag
-  final Set<Type> _sessionTypes = {};
+  final List<VoidCallback> _cleanupCallbacks = [];
 
-  /// Register a type as session-scoped
-  void registerSessionType<T>() {
-    _sessionTypes.add(T);
+  /// Register a callback that will be invoked when [clearSession] is called.
+  void registerCleanup(VoidCallback cleanup) {
+    _cleanupCallbacks.add(cleanup);
   }
 
-  /// Clear all session-level bindings
+  /// Clear all session-level bindings by running every registered cleanup.
   void clearSession() {
     debugPrint("SessionManager: Clearing all session-level dependencies.");
-
-    // Delete all tracked session types with the session tag
-    for (final type in _sessionTypes) {
+    for (final cleanup in _cleanupCallbacks) {
       try {
-        Get.delete(tag: sessionTag);
+        cleanup();
       } catch (e) {
-        debugPrint("SessionManager: Error deleting $type: $e");
+        debugPrint("SessionManager: Error during cleanup: $e");
       }
     }
-
-    _sessionTypes.clear();
+    _cleanupCallbacks.clear();
   }
 
-  /// Check if session is active by checking if session-tagged controllers exist
-  bool get hasActiveSession {
-    // Check if any session-tagged dependency exists
-    for (final _ in _sessionTypes) {
-      try {
-        Get.find(tag: sessionTag);
-        return true;
-      } catch (e) {
-        // Continue checking other types
-      }
-    }
-    return false;
-  }
+  /// Returns true while there are registered session cleanup callbacks,
+  /// i.e., session bindings have been set up but not yet cleared.
+  bool get hasActiveSession => _cleanupCallbacks.isNotEmpty;
 
-  /// Get the current session tag
+  /// The tag used for all session-scoped GetX dependencies.
   String get currentSessionTag => sessionTag;
 }
+

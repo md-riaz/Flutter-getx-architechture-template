@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:getx_modular_template/core/implementations/memory_storage_service.dart';
 import 'package:getx_modular_template/core/services/api_client.dart';
 import 'package:getx_modular_template/core/services/auth_service.dart';
 import 'package:getx_modular_template/core/services/session_manager.dart';
@@ -14,16 +15,16 @@ void main() {
     Get.reset();
   });
 
-  group('AuthService', () {
+  group('AuthService (without storage)', () {
     late AuthService authService;
     late AuthRepository authRepository;
     late SessionManager sessionManager;
-    late ApiClient apiClient;
 
     setUp(() {
-      apiClient = ApiClient();
+      final apiClient = ApiClient();
       authRepository = AuthRepository(apiClient);
       sessionManager = SessionManager();
+      // No storageService — token persistence is skipped
       authService = AuthService(authRepository, sessionManager);
     });
 
@@ -39,7 +40,6 @@ void main() {
       expect(authService.isLoggedIn, isTrue);
       expect(authService.currentUser, isNotNull);
       expect(authService.currentUser?.email, 'test@example.com');
-      expect(sessionManager.hasActiveSession, isTrue);
     });
 
     test('login fails with empty credentials', () async {
@@ -51,19 +51,13 @@ void main() {
     });
 
     test('logout clears user immediately', () async {
-      // First login
       await authService.login('test@example.com', 'password');
       expect(authService.isLoggedIn, isTrue);
 
-      // Then logout (now synchronous)
       authService.logout();
 
-      // User should be cleared immediately
       expect(authService.isLoggedIn, isFalse);
       expect(authService.currentUser, isNull);
-      
-      // Session cleanup happens in post-frame callback, so we can't test it here
-      // In a real app, the session would be cleared after the frame
     });
 
     test('validateSession returns true for logged in user', () async {
@@ -92,5 +86,70 @@ void main() {
       expect(authService.permissions, isNotNull);
       expect(authService.permissions?.inventoryAccess, isTrue);
     });
+
+    test('restoreSession returns false when no storageService is provided', () async {
+      final restored = await authService.restoreSession();
+      expect(restored, isFalse);
+    });
+  });
+
+  group('AuthService (with storage)', () {
+    late AuthService authService;
+    late MemoryStorageService storage;
+
+    setUp(() async {
+      storage = MemoryStorageService();
+      await storage.init();
+      final apiClient = ApiClient();
+      final authRepository = AuthRepository(apiClient);
+      final sessionManager = SessionManager();
+      authService = AuthService(authRepository, sessionManager, storage);
+    });
+
+    test('login persists token to storage', () async {
+      await authService.login('test@example.com', 'password');
+
+      final token = await storage.getString('auth_token');
+      expect(token, isNotNull);
+      expect(token, isNotEmpty);
+    });
+
+    test('restoreSession restores user from stored token', () async {
+      // Login to persist token
+      await authService.login('test@example.com', 'password');
+      final originalToken = authService.currentUser!.token;
+
+      // Simulate app restart by creating a fresh AuthService with same storage
+      final apiClient2 = ApiClient();
+      final authRepository2 = AuthRepository(apiClient2);
+      final sessionManager2 = SessionManager();
+      final freshAuthService =
+          AuthService(authRepository2, sessionManager2, storage);
+
+      expect(freshAuthService.isLoggedIn, isFalse);
+
+      final restored = await freshAuthService.restoreSession();
+
+      expect(restored, isTrue);
+      expect(freshAuthService.isLoggedIn, isTrue);
+      expect(freshAuthService.currentUser?.token, originalToken);
+    });
+
+    test('restoreSession returns false when no token is stored', () async {
+      final restored = await authService.restoreSession();
+      expect(restored, isFalse);
+    });
+
+    test('logout clears persisted token', () async {
+      await authService.login('test@example.com', 'password');
+      expect(await storage.getString('auth_token'), isNotNull);
+
+      authService.logout();
+
+      // Give the logout time to clear storage (it is async but not awaited)
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(await storage.getString('auth_token'), isNull);
+    });
   });
 }
+

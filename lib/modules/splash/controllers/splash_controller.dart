@@ -17,7 +17,17 @@ class SplashController extends GetxController {
   Future<void> _initializeApp() async {
     debugPrint('SplashController: _initializeApp started');
     await Future.delayed(const Duration(seconds: 2));
-    debugPrint('SplashController: Finished delay, validating session');
+
+    // First try to restore a persisted session (token from previous run)
+    final restored = await _authService.restoreSession();
+    if (restored) {
+      debugPrint('SplashController: Session restored, navigating to dashboard');
+      Get.offAllNamed(Routes.dashboard);
+      return;
+    }
+
+    // Fall back to validating any in-memory session
+    debugPrint('SplashController: No stored session, validating in-memory');
     final hasValidSession = await _authService.validateSession();
     debugPrint('SplashController: Session valid? $hasValidSession');
     if (hasValidSession) {

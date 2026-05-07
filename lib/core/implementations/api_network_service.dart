@@ -1,17 +1,16 @@
-import 'dart:convert';
+import 'package:dio/dio.dart';
 import '../interfaces/network_interface.dart';
-import '../services/api_client.dart';
 
-/// Network service implementation using the existing ApiClient
-/// This wraps the existing ApiClient to conform to INetworkService interface
-/// In the future, this can be replaced with Dio, http package, or any other HTTP client
+/// Network service implementation using Dio.
+/// Wraps a shared [Dio] instance (provided by [DioApiClient]) to conform to
+/// the [INetworkService] interface used by other parts of the application.
 class ApiNetworkService implements INetworkService {
-  final ApiClient _apiClient;
+  final Dio _dio;
   String _baseUrl = '';
   Map<String, String> _defaultHeaders = {};
   Duration _timeout = const Duration(seconds: 30);
 
-  ApiNetworkService(this._apiClient);
+  ApiNetworkService(this._dio);
 
   @override
   Future<NetworkResponse> get(

@@ -1,15 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:getx_modular_template/core/implementations/api_network_service.dart';
-import 'package:getx_modular_template/core/services/api_client.dart';
 
 void main() {
   group('ApiNetworkService', () {
     late ApiNetworkService networkService;
-    late ApiClient apiClient;
 
     setUp(() {
-      apiClient = ApiClient();
-      networkService = ApiNetworkService(apiClient);
+      networkService = ApiNetworkService(Dio());
     });
 
     test('get request returns success response', () async {
