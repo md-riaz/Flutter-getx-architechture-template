@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/inventory_controller.dart';
+
+import '../../../core/config/navigation_config.dart';
 import '../../../core/widgets/app_layout.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/responsive_builder.dart';
-import '../../../core/config/navigation_config.dart';
+import '../controllers/inventory_controller.dart';
 
-class InventoryView extends GetView<InventoryController> {
+class InventoryView extends StatelessWidget {
   const InventoryView({super.key});
+
+  InventoryController get controller =>
+      Get.find<InventoryController>(tag: 'session');
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +27,8 @@ class InventoryView extends GetView<InventoryController> {
             tooltip: 'Add Item',
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Add item functionality coming soon!')),
+                const SnackBar(
+                    content: Text('Add item functionality coming soon!')),
               );
             },
           ),
@@ -32,7 +37,8 @@ class InventoryView extends GetView<InventoryController> {
             tooltip: 'Filter',
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Filter functionality coming soon!')),
+                const SnackBar(
+                    content: Text('Filter functionality coming soon!')),
               );
             },
           ),
@@ -42,7 +48,8 @@ class InventoryView extends GetView<InventoryController> {
           ? FloatingActionButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Add item functionality coming soon!')),
+                  const SnackBar(
+                      content: Text('Add item functionality coming soon!')),
                 );
               },
               child: const Icon(Icons.add),
@@ -146,7 +153,9 @@ class InventoryView extends GetView<InventoryController> {
                       Text(
                         'Quantity: ${item.quantity}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                       ),
                     ],

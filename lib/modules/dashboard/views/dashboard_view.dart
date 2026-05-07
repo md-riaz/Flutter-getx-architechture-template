@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/dashboard_controller.dart';
-import '../../inventory/views/widgets/inventory_summary_card.dart';
+
+import '../../../core/config/navigation_config.dart';
 import '../../../core/widgets/app_layout.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/responsive_builder.dart';
-import '../../../core/config/navigation_config.dart';
+import '../../inventory/views/widgets/inventory_summary_card.dart';
+import '../controllers/dashboard_controller.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -14,7 +15,7 @@ class DashboardView extends StatelessWidget {
   Widget build(BuildContext context) {
     // Get the session-tagged controller
     final controller = Get.find<DashboardController>(tag: 'session');
-    
+
     return AppLayout(
       title: 'Dashboard',
       navigationItems: NavigationConfig.mainNavigationItems,
@@ -40,7 +41,7 @@ class DashboardView extends StatelessWidget {
                 ),
               ),
               children: [
-                _buildWelcomeSection(context),
+                _buildWelcomeSection(context, controller),
                 const SizedBox(height: 24),
                 _buildFeaturesGrid(context, features),
               ],
@@ -51,7 +52,8 @@ class DashboardView extends StatelessWidget {
     );
   }
 
-  Widget _buildWelcomeSection(BuildContext context) {
+  Widget _buildWelcomeSection(
+      BuildContext context, DashboardController controller) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24.0),

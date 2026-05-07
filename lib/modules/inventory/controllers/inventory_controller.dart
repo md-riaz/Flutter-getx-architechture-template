@@ -1,8 +1,11 @@
 import 'package:get/get.dart';
+
 import '../data/models/inventory_item.dart';
 import '../services/inventory_service.dart';
 
 class InventoryController extends GetxController {
+  static const String sessionTag = 'session';
+
   final InventoryService service;
 
   InventoryController(this.service);

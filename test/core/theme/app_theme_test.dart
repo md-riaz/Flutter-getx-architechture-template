@@ -87,13 +87,15 @@ void main() {
     test('light theme uses correct font family', () {
       final lightTheme = AppTheme.light;
 
-      expect(lightTheme.fontFamily, AppThemeConfig.fontFamilyPrimary);
+      expect(lightTheme.textTheme.bodyMedium?.fontFamily,
+          AppThemeConfig.fontFamilyPrimary);
     });
 
     test('dark theme uses correct font family', () {
       final darkTheme = AppTheme.dark;
 
-      expect(darkTheme.fontFamily, AppThemeConfig.fontFamilyPrimary);
+      expect(darkTheme.textTheme.bodyMedium?.fontFamily,
+          AppThemeConfig.fontFamilyPrimary);
     });
 
     testWidgets('light theme renders correctly in MaterialApp',
@@ -208,8 +210,7 @@ void main() {
 
     test('has correct animation durations', () {
       expect(AppThemeConfig.animationFast, const Duration(milliseconds: 150));
-      expect(
-          AppThemeConfig.animationNormal, const Duration(milliseconds: 300));
+      expect(AppThemeConfig.animationNormal, const Duration(milliseconds: 300));
       expect(AppThemeConfig.animationSlow, const Duration(milliseconds: 500));
     });
 

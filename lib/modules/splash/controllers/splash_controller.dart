@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/services/auth_service.dart';
+
 import '../../../core/routes/app_routes.dart';
+import '../../../core/services/auth_service.dart';
 
 class SplashController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
@@ -8,21 +10,21 @@ class SplashController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    debugPrint('SplashController: onInit called');
     _initializeApp();
   }
 
   Future<void> _initializeApp() async {
-    // Simulate app initialization (loading config, checking updates, etc.)
+    debugPrint('SplashController: _initializeApp started');
     await Future.delayed(const Duration(seconds: 2));
-
-    // Check if user has valid session
+    debugPrint('SplashController: Finished delay, validating session');
     final hasValidSession = await _authService.validateSession();
-
+    debugPrint('SplashController: Session valid? $hasValidSession');
     if (hasValidSession) {
-      // User is logged in, go to dashboard
+      debugPrint('SplashController: Navigating to dashboard');
       Get.offAllNamed(Routes.dashboard);
     } else {
-      // User is not logged in, go to login
+      debugPrint('SplashController: Navigating to login');
       Get.offAllNamed(Routes.login);
     }
   }

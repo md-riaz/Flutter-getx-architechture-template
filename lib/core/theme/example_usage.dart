@@ -1,12 +1,14 @@
 /// This file demonstrates how to use the theme configuration system.
-/// 
+///
 /// This is for documentation purposes only and is not used in the app.
 /// You can delete this file or use it as a reference for implementing
 /// themed widgets in your application.
+library example_usage;
 
 // ignore_for_file: unused_element, unused_local_variable
 
 import 'package:flutter/material.dart';
+
 import 'theme.dart';
 
 /// Example 1: Using theme colors in a widget
@@ -185,11 +187,10 @@ class StatusIndicatorExample extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(AppThemeConfig.spaceM),
       decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.1),
-        borderRadius:
-            AppThemeConfig.borderRadius(AppThemeConfig.radiusM),
+        color: statusColor.withValues(alpha: (0.1 * 255)),
+        borderRadius: AppThemeConfig.borderRadius(AppThemeConfig.radiusM),
         border: Border.all(
-          color: statusColor.withOpacity(0.5),
+          color: statusColor.withValues(alpha: (0.5 * 255)),
           width: 1,
         ),
       ),
@@ -238,8 +239,7 @@ class _AnimatedThemedContainerExampleState
         height: _isExpanded ? 200 : 100,
         decoration: BoxDecoration(
           color: _isExpanded ? AppColors.primary : AppColors.secondary,
-          borderRadius:
-              AppThemeConfig.borderRadius(AppThemeConfig.radiusL),
+          borderRadius: AppThemeConfig.borderRadius(AppThemeConfig.radiusL),
         ),
         child: Center(
           child: Icon(
@@ -306,7 +306,7 @@ class ThemedChipExample extends StatelessWidget {
     return ActionChip(
       label: Text(label),
       backgroundColor: isSelected
-          ? AppColors.primary.withOpacity(0.2)
+          ? AppColors.primary.withValues(alpha: (0.2 * 255))
           : Theme.of(context).colorScheme.surface,
       side: BorderSide(
         color: isSelected
@@ -314,8 +314,7 @@ class ThemedChipExample extends StatelessWidget {
             : Theme.of(context).colorScheme.outline,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius:
-            AppThemeConfig.borderRadius(AppThemeConfig.radiusM),
+        borderRadius: AppThemeConfig.borderRadius(AppThemeConfig.radiusM),
       ),
       padding: EdgeInsets.symmetric(
         horizontal: AppThemeConfig.spaceM,
