@@ -9,7 +9,7 @@ class ApiRequestOptions {
     this.timeout,
     this.retryCount = 0,
     this.headers,
-  }) : assert(retryCount >= 0, 'retryCount must be non-negative (>= 0)');
+  }) : assert(retryCount >= 0, 'retryCount must be >= 0');
 
   ApiRequestOptions copyWith({
     String? token,
