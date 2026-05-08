@@ -146,14 +146,19 @@ class DioApiClient {
       ...?headers,
     };
 
-    if (requestOptions?.token != null && requestOptions!.token!.isNotEmpty) {
-      final token = requestOptions.token!;
+    final token = requestOptions?.token;
+    if (token != null && token.isNotEmpty) {
       mergedHeaders['Authorization'] =
           token.startsWith('Bearer ') ? token : 'Bearer $token';
     }
 
-    if (mergedHeaders.isEmpty &&
-        requestOptions == null) {
+    final hasAdvancedOptions = requestOptions != null &&
+        (requestOptions.timeout != null ||
+            requestOptions.retryCount > 0 ||
+            requestOptions.token != null ||
+            requestOptions.headers != null);
+
+    if (mergedHeaders.isEmpty && !hasAdvancedOptions) {
       return null;
     }
 

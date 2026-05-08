@@ -3,10 +3,12 @@ import 'package:dio/dio.dart';
 class RetryInterceptor extends Interceptor {
   final Dio dio;
   final Duration baseDelay;
+  final Duration maxDelay;
 
   RetryInterceptor({
     required this.dio,
     this.baseDelay = const Duration(milliseconds: 300),
+    this.maxDelay = const Duration(seconds: 5),
   });
 
   @override
@@ -48,6 +50,8 @@ class RetryInterceptor extends Interceptor {
 
   Duration _computeDelay(int attempt) {
     final multiplier = 1 << attempt;
-    return Duration(milliseconds: baseDelay.inMilliseconds * multiplier);
+    final delay = Duration(milliseconds: baseDelay.inMilliseconds * multiplier);
+    if (delay > maxDelay) return maxDelay;
+    return delay;
   }
 }
