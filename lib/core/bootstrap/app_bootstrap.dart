@@ -7,7 +7,7 @@ class AppBootstrap {
   AppBootstrap._();
 
   static Future<void> boot() async {
-    await Config.load();
+    await AppConfig.load();
     await ServiceRegistry.register();
     await Database.boot();
     await AuthBootstrap.boot();

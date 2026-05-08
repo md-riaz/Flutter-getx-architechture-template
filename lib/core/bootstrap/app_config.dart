@@ -1,5 +1,5 @@
-class Config {
-  Config._();
+class AppConfig {
+  AppConfig._();
 
   static Future<void> load() async {}
 }

@@ -86,44 +86,44 @@ class Api {
         headers: headers,
       );
 
-  static _ApiRequestBuilder withToken(String token) {
-    return _ApiRequestBuilder(
+  static ApiRequestBuilder withToken(String token) {
+    return ApiRequestBuilder(
       _client,
       const ApiRequestOptions().copyWith(token: token),
     );
   }
 
-  static _ApiRequestBuilder retry(int count) {
-    return _ApiRequestBuilder(
+  static ApiRequestBuilder retry(int count) {
+    return ApiRequestBuilder(
       _client,
       const ApiRequestOptions().copyWith(retryCount: count),
     );
   }
 
-  static _ApiRequestBuilder timeout(Duration duration) {
-    return _ApiRequestBuilder(
+  static ApiRequestBuilder timeout(Duration duration) {
+    return ApiRequestBuilder(
       _client,
       const ApiRequestOptions().copyWith(timeout: duration),
     );
   }
 }
 
-class _ApiRequestBuilder {
+class ApiRequestBuilder {
   final DioApiClient _client;
   final ApiRequestOptions _options;
 
-  const _ApiRequestBuilder(this._client, this._options);
+  const ApiRequestBuilder(this._client, this._options);
 
-  _ApiRequestBuilder withToken(String token) {
-    return _ApiRequestBuilder(_client, _options.copyWith(token: token));
+  ApiRequestBuilder withToken(String token) {
+    return ApiRequestBuilder(_client, _options.copyWith(token: token));
   }
 
-  _ApiRequestBuilder retry(int count) {
-    return _ApiRequestBuilder(_client, _options.copyWith(retryCount: count));
+  ApiRequestBuilder retry(int count) {
+    return ApiRequestBuilder(_client, _options.copyWith(retryCount: count));
   }
 
-  _ApiRequestBuilder timeout(Duration duration) {
-    return _ApiRequestBuilder(_client, _options.copyWith(timeout: duration));
+  ApiRequestBuilder timeout(Duration duration) {
+    return ApiRequestBuilder(_client, _options.copyWith(timeout: duration));
   }
 
   Future<ApiResponse<T>> get<T>(

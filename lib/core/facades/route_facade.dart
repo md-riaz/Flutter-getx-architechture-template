@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
-class Route {
-  Route._();
+class RouteFacade {
+  RouteFacade._();
 
   static Future<T?> toNamed<T>(
     String route, {

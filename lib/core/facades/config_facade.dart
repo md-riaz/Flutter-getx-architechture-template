@@ -1,5 +1,5 @@
-class ConfigFacade {
-  ConfigFacade._();
+class Config {
+  Config._();
 
   static final Map<String, dynamic> _values = {};
 
