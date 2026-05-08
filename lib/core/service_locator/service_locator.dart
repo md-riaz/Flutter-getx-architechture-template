@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import '../http/api_client.dart';
 import '../interfaces/interfaces.dart';
 import '../implementations/implementations.dart';
 
@@ -6,17 +7,23 @@ import '../implementations/implementations.dart';
 /// This provides dependency injection using get_it package
 final GetIt locator = GetIt.instance;
 
-/// Initialize all services in the service locator
-/// This should be called at app startup before any services are used
+/// Initialize all services in the service locator.
+/// Must be called at app startup (before [runApp]) so that all facades and
+/// get_it-backed services are available immediately.
 Future<void> setupServiceLocator() async {
   // Storage Service
   locator.registerLazySingleton<IStorageService>(
     () => MemoryStorageService(),
   );
 
-  // Network Service
+  // Shared Dio-based HTTP client (used by Api facade and modules)
+  locator.registerLazySingleton<DioApiClient>(
+    () => DioApiClient(),
+  );
+
+  // Network Service — wraps DioApiClient to satisfy INetworkService callers
   locator.registerLazySingleton<INetworkService>(
-    () => ApiNetworkService(locator<INetworkService>() as dynamic),
+    () => ApiNetworkService(locator<DioApiClient>().dio),
   );
 
   // Device Info Service

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'core/bootstrap/app_bootstrap.dart';
 import 'core/bindings/app_bindings.dart';
 import 'core/routes/app_pages.dart';
 import 'core/routes/app_routes.dart';
 import 'core/theme/app_theme.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppBootstrap.boot();
+
   runApp(const ModularGetXApp());
 }
 

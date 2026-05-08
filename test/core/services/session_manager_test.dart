@@ -22,28 +22,43 @@ void main() {
       expect(sessionManager.currentSessionTag, 'session');
     });
 
-    test('hasActiveSession returns false when no session dependencies exist', () {
+    test('hasActiveSession returns false when no cleanups are registered', () {
       expect(sessionManager.hasActiveSession, isFalse);
     });
 
-    test('hasActiveSession returns true when session dependencies exist', () {
-      // Register a test dependency with session tag
-      Get.put('test_value', tag: sessionManager.currentSessionTag);
-
+    test('hasActiveSession returns true when a cleanup is registered', () {
+      sessionManager.registerCleanup(() {});
       expect(sessionManager.hasActiveSession, isTrue);
-      
+
       // Clean up
       sessionManager.clearSession();
     });
 
-    test('clearSession deletes tagged dependencies', () {
-      // Register a test dependency with session tag
+    test('clearSession runs registered cleanup callbacks', () {
+      var callCount = 0;
+      sessionManager.registerCleanup(() => callCount++);
+      sessionManager.registerCleanup(() => callCount++);
+
+      sessionManager.clearSession();
+
+      expect(callCount, 2);
+      expect(sessionManager.hasActiveSession, isFalse);
+    });
+
+    test('clearSession integrates with Get.delete for tagged dependencies', () {
       Get.put('test_value', tag: sessionManager.currentSessionTag);
 
       expect(
         Get.isRegistered<String>(tag: sessionManager.currentSessionTag),
         isTrue,
       );
+
+      sessionManager.registerCleanup(() {
+        Get.delete<String>(
+          tag: sessionManager.currentSessionTag,
+          force: true,
+        );
+      });
 
       sessionManager.clearSession();
 
@@ -54,12 +69,19 @@ void main() {
     });
 
     test('multiple clearSession calls are safe', () {
-      // Register and clear
-      Get.put('test_value', tag: sessionManager.currentSessionTag);
+      sessionManager.registerCleanup(() {});
       sessionManager.clearSession();
 
-      // Should not throw
+      // Should not throw on a second call with empty callback list
       expect(() => sessionManager.clearSession(), returnsNormally);
+    });
+
+    test('clearSession handles errors in callbacks without throwing', () {
+      sessionManager.registerCleanup(() => throw Exception('boom'));
+      sessionManager.registerCleanup(() {}); // should still run
+
+      expect(() => sessionManager.clearSession(), returnsNormally);
+      expect(sessionManager.hasActiveSession, isFalse);
     });
   });
 }

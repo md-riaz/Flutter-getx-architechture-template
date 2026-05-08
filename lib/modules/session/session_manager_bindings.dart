@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../../core/services/auth_service.dart';
+import '../../core/services/session_manager.dart';
 import '../inventory/bindings/inventory_bindings.dart';
 
 class SessionManagerBindings extends Bindings {
@@ -15,5 +16,7 @@ class SessionManagerBindings extends Bindings {
     if (permissions?.inventoryAccess == true) {
       InventoryBindings().dependencies();
     }
+    // Cleanup callbacks are registered inside each feature's Bindings class,
+    // so no additional registration is needed here.
   }
 }

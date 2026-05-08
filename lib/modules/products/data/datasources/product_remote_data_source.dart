@@ -1,24 +1,34 @@
 import 'package:dio/dio.dart';
+import '../../../../core/http/api_client.dart';
+import '../../../../core/service_locator/service_locator.dart';
 import '../models/product.dart';
 import 'product_data_source.dart';
 
 /// Remote data source implementation for products
 /// This handles all API calls to JSONPlaceholder API using Dio
-/// Dio provides network interceptors for auth token injection and other middleware
+/// Dio is provided by the shared [DioApiClient] registered in the service
+/// locator, keeping auth tokens and interceptors consistent across modules.
 class ProductRemoteDataSource implements ProductDataSource {
   static const String baseUrl = 'https://jsonplaceholder.typicode.com';
   final Dio _dio;
 
-  ProductRemoteDataSource([Dio? dio]) 
-      : _dio = dio ?? Dio(BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 3),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        ));
+  /// Prefer the constructor that accepts an explicit [Dio] for testing.
+  /// In production the shared [DioApiClient] from the service locator is used.
+  ProductRemoteDataSource([Dio? dio])
+      : _dio = dio ??
+            (locator.isRegistered<DioApiClient>()
+                ? locator<DioApiClient>().dio
+                : Dio(
+                    BaseOptions(
+                      baseUrl: baseUrl,
+                      connectTimeout: const Duration(seconds: 5),
+                      receiveTimeout: const Duration(seconds: 3),
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                      },
+                    ),
+                  ));
 
   /// Configure interceptors for auth token injection and logging
   void configureInterceptors({

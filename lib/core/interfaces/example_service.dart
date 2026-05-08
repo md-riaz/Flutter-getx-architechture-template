@@ -155,16 +155,18 @@ class ExampleService extends GetxService {
 
 /// Example usage in a binding:
 /// ```dart
+/// import 'package:getx_modular_template/core/service_locator/service_locator.dart';
+///
 /// class ExampleBindings extends Bindings {
 ///   @override
 ///   void dependencies() {
 ///     Get.lazyPut<ExampleService>(
 ///       () => ExampleService(
-///         storage: Get.find<IStorageService>(),
-///         network: Get.find<INetworkService>(),
-///         logger: Get.find<ILoggerService>(),
-///         deviceInfo: Get.find<IDeviceInfoService>(),
-///         connectivity: Get.find<IConnectivityService>(),
+///         storage: locator<IStorageService>(),
+///         network: locator<INetworkService>(),
+///         logger: locator<ILoggerService>(),
+///         deviceInfo: locator<IDeviceInfoService>(),
+///         connectivity: locator<IConnectivityService>(),
 ///       ),
 ///     );
 ///   }
